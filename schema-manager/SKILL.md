@@ -150,12 +150,12 @@ Schema patches group related changes into a named changeset that can be reviewed
 curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/patch/${TABLE}" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
 
-# Create a new patch
+# Create a new patch -- `tag` (kebab-case identifier) and `description` are both required.
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/patch/${TABLE}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "add-purchase-fields",
+    "tag": "add-purchase-fields",
     "description": "Add purchase tracking fields and mappings for Shopify integration"
   }'
 
@@ -179,18 +179,21 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/patch/${TABL
 ```
 
 **Add fields to a patch:**
+
+> **Patch endpoint payload shape is lowercase.** Use `id` (the field name), `type`, `shortdesc`, `mergeop`, `is_identifier`, `is_pii`. The capitalized shape (`Field`, `Type`, `ShortDesc`, ...) shown in the non-patch direct-write examples below is NOT accepted here -- patch endpoints will return `Attribute 'Field' is required for Field` if you send capitalized keys.
+
 ```bash
 # Add or update a field in the patch
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/patch/${TABLE}/${PATCH_ID}/field" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "Field": "purchase_total",
-    "Type": "number",
-    "ShortDesc": "Total purchase amount",
-    "MergeOp": "sum",
-    "IsIdentifier": false,
-    "IsPII": false
+    "id": "purchase_total",
+    "type": "number",
+    "shortdesc": "Total purchase amount",
+    "mergeop": "sum",
+    "is_identifier": false,
+    "is_pii": false
   }'
 
 # Update an existing field in the patch
