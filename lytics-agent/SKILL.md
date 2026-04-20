@@ -94,6 +94,10 @@ Route based on keywords and intent:
 **Triggers**: "connection", "auth", "credentials", "provider"
 **Route to**: `connection-manager skill`
 
+### Cross-Account Sync / Promotion
+**Triggers**: "copy from sandbox to prod", "promote to prod", "sync to prod", "copy segment to another account", "sandbox to production", "promote audience", "promote flow", "copy schema between accounts", "move segment from X to Y", "sync <anything> from <account> to <account>"
+**Route to**: `account-sync skill`
+
 ## Multi-Intent Handling
 
 Some requests combine multiple intents. Sequence skills in order:
@@ -109,6 +113,10 @@ Some requests combine multiple intents. Sequence skills in order:
 - "What fields do we have for purchase data and build a segment from it"
   1. `schema-discovery skill` -> find purchase fields
   2. `audience-builder skill` -> build segment using discovered fields
+
+- "Build a segment in sandbox and promote it to prod"
+  1. `audience-builder skill` -> create segment in sandbox
+  2. `account-sync skill` -> copy the new segment from sandbox to prod
 
 ## Disambiguation
 

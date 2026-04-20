@@ -15,6 +15,23 @@ npx skills add lytics/agent-skills
 | `LYTICS_API_TOKEN` | Yes | Lytics API token for authentication |
 | `LYTICS_API_URL` | No | Custom API base URL (defaults to Lytics production API) |
 
+### Cross-Account Profile Config (for `account-sync`)
+
+The `account-sync` skill operates against two accounts per run and reads credentials from a profile file rather than the session env vars.
+
+**Path:** `~/.lytics/accounts.toml`
+
+```toml
+[sandbox]
+token = "lyt_xxx"
+url = "https://api.lytics.io"   # optional
+
+[prod]
+token = "lyt_yyy"
+```
+
+Profile names are user-chosen. If the file is missing or a profile isn't found, `account-sync` prompts for the token in-session (not persisted).
+
 ## Available Skills
 
 ### Audiences & Segments
@@ -60,6 +77,12 @@ npx skills add lytics/agent-skills
 |-------|-------------|
 | `campaign-flow-builder` | Guided multi-step campaign/journey creation |
 | `flow-manager` | Flow/journey CRUD and step management |
+
+### Cross-Account Operations
+
+| Skill | Description |
+|-------|-------------|
+| `account-sync` | Copy segments, schema, flows, jobs, connections, and auth between Lytics accounts (e.g., sandbox -> prod) with dep traversal, upsert-by-natural-key, and dry-run safety |
 
 ### Monitoring & General
 
