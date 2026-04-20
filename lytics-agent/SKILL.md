@@ -95,7 +95,7 @@ Route based on keywords and intent:
 **Route to**: `connection-manager skill`
 
 ### Cross-Account Sync / Promotion
-**Triggers**: "copy from sandbox to prod", "promote to prod", "sync to prod", "copy segment to another account", "sandbox to production", "promote audience", "promote flow", "copy schema between accounts", "move segment from X to Y", "sync <anything> from <account> to <account>"
+**Triggers**: "copy from sandbox to prod", "promote to prod", "sync to prod", "copy segment to another account", "sandbox to production", "promote audience", "promote flow", "copy schema between accounts", "move segment from X to Y", "sync <anything> from <account> to <account>", "copy account settings", "promote settings", "sync settings between accounts", "copy idconfig", "sync account config", "promote account settings", "copy field rankings between accounts"
 **Route to**: `account-sync skill`
 
 ## Multi-Intent Handling

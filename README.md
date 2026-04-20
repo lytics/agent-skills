@@ -82,7 +82,7 @@ Profile names are user-chosen. If the file is missing or a profile isn't found, 
 
 | Skill | Description |
 |-------|-------------|
-| `account-sync` | Copy segments, schema, flows, jobs, connections, and auth between Lytics accounts (e.g., sandbox -> prod) with dep traversal, upsert-by-natural-key, and dry-run safety |
+| `account-sync` | Copy segments, schema, flows, jobs, connections, auth, and account-level configuration (settings, per-table idconfig, field rankings) between Lytics accounts (e.g., sandbox -> prod) with dep traversal, upsert-by-natural-key, dry-run safety, and an extra retype gate for `idconfig` |
 
 ### Monitoring & General
 

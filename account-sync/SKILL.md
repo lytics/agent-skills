@@ -1,6 +1,6 @@
 ---
 name: account-sync
-description: Copy metadata (segments, schema, flows, jobs, connections, auth) between Lytics accounts. Use when the user wants to promote changes from a sandbox account to production, sync objects between accounts, or copy an object from one account to another.
+description: Copy metadata (segments, schema, flows, jobs, connections, auth) and account-level configuration (settings, per-table idconfig, field rankings) between Lytics accounts. Use when the user wants to promote changes from a sandbox account to production, sync objects between accounts, or copy an object from one account to another.
 metadata:
   arguments: object type, selector, source profile, destination profile, and optional flags -- sync <type> <selector> from <src> to <dst> [--dry-run] [--create-only] [--diff] [--no-trace]
 ---
@@ -55,12 +55,15 @@ Examples:
 - `sync flow welcome-series from sandbox to prod --dry-run`
 - `sync all schema from sandbox to prod --diff`
 - `sync segments --prefix beta_ from sandbox to prod`
+- `sync settings from sandbox to prod` (all account settings + per-table idconfig + rank)
+- `sync setting onboarding_question_vertical from sandbox to prod`
+- `sync idconfig user from sandbox to prod`
 - `compare from sandbox to prod` (full inventory audit; reports by type)
 - `compare segments from sandbox to prod --deep`
 - `resume ~/.lytics/sync/2026-04-16T20-38-25Z-sandbox-to-prod.json`
 
 ### Types
-`segment`, `schema` (fields + mappings), `flow`, `job`, `connection`, `auth`. Plural forms are accepted (`segments`, `flows`, etc.). `all` works with any type (`sync all flows ...`).
+`segment`, `schema` (fields + mappings), `flow`, `job`, `connection`, `auth`, `settings` (account-level config: `account.setting`, `account.idconfig`, `account.rank` as a bundle), plus the individual settings types `setting` (single key from `account.setting`), `idconfig`, `rank`. Plural forms are accepted (`segments`, `flows`, etc.). `all` works with any type (`sync all flows ...`).
 
 ### Selectors (sync only)
 - **By name/slug**: `sync segment high_value_customers from sandbox to prod`
@@ -125,6 +128,11 @@ Translate the selector into a concrete list of source objects:
 | Single/all job | `GET /v2/job` (add `show_completed=true&show_deleted=false` when broad) |
 | Single/all connection | `GET /v2/connection` |
 | Single/all auth | `GET /v2/auth` |
+| All account settings | `GET /api/account/setting` (note: `/api/`, not `/v2/`; singular `setting`) |
+| Single account setting | `GET /api/account/setting/{slug}` |
+| Per-table idconfig | `GET /v2/schema/{table}/idconfig` -- 404 means "not set on this account," not an error |
+| Per-table field rank | `GET /v2/schema/{table}/rank` |
+| All settings (bundle) | All three above: the flat `account.setting` list, plus idconfig and rank for each schema table |
 
 For prefix and all-of-type, the **bulk-operation gate** (Safety Layers) fires before continuing.
 
@@ -170,12 +178,16 @@ For each node in the graph, look up the destination by natural key:
 | Job | `(name, workflow)` | `GET /v2/job?show_all=true` then filter |
 | Connection | `(label, provider_slug)` | `GET /v2/connection` then filter. The user-facing name is stored as `label`, not `name` |
 | Auth | `(label, type)` | `GET /v2/auth` then filter. The user-facing name is stored as `label`, not `name` |
+| Account setting | `slug` (e.g., `onboarding_question_vertical`) | `GET /api/account/setting` then filter, or `GET /api/account/setting/{slug}` for a single key. Flat key/value on the account; no surrogate ID |
+| Account idconfig | `(table)` | `GET /v2/schema/{table}/idconfig`. Table-scoped singleton. 404 means not set on this account (treat as empty, not an error) |
+| Account rank | `(table)` | `GET /v2/schema/{table}/rank`. Table-scoped singleton |
 
 Classify each node:
 - **create** -- not present in destination.
 - **update** -- present; source differs from destination (upsert mode).
 - **skip** -- present; source and destination are equivalent (after stripping traceability line).
 - **conflict** -- present with same natural key but differing definition while running under `--create-only`, or a dep conflict under any mode. Terminal classification -- the plan surfaces it; see Dependency-Conflict Handling.
+- **drift-readonly** -- settings only; source and destination differ but `can_be_assigned: false` so the skill cannot write. Informational; surfaced in the plan but never executed.
 
 ### Step 5: Render Plan
 Print the full plan and wait for approval. Format:
@@ -279,6 +291,9 @@ Strip these fields per type before comparing. They are either server-metadata (t
 | Job | `id`, `aid`, `account_id`, `author_id`, `created`, `updated`, `state`, `work_state`, `last_run` | `auth_ids` (remap + strip for compare; see Cross-Reference Remapping) |
 | Connection | `id`, `aid`, `account_id`, `author_id`, `updated_by_user_id`, `created`, `updated` | `auth_ids` (remap + strip) |
 | Auth | `id`, `account_id`, `user_id`, `provider_id`, `created`, `updated`, `last_accessed_at`, `status`, `unhealthy` | -- |
+| Account setting | `field` (type/label/description metadata, not user value), `subject`, `category`, `sub_category`, `can_be_assigned` -- all server-derived descriptors. Only `value` is user-owned. | -- |
+| Account idconfig | `created`, `modified`, `edit_status` | account-scoped IDs if present |
+| Account rank | `created`, `modified`, `edit_status` | -- |
 
 ### Trace-Line Stripping (All Description-Like Fields)
 
@@ -410,6 +425,138 @@ Auth is the trickiest type. Behavior:
   ```
 - **Direct auth copy (only when the user runs `sync auth ...` explicitly)**: copy via `POST /v2/auth/{type}`. Never auto-copy OAuth auths -- they require a completed flow and the token will not be valid for the new account. OAuth auths are always blockers.
 
+## Account Settings
+
+Account settings are a different shape from everything else in this skill: flat key/value on the account (for `account.setting`) or a table-scoped singleton (for `idconfig` and `rank`). They have no surrogate IDs, no cross-references to other objects, and no `description` field for a trace line. The manifest is the sole audit record.
+
+### Endpoints
+
+**Path is `/api/account/setting` (singular; `/api/` not `/v2/`).** Source: `lytics/lio/src/api/rw/account_setting.go`.
+
+```bash
+# List all settings (returns 99+ items typically; each is {slug, category, sub_category, value, field, can_be_assigned, subject})
+curl -s "${API}/api/account/setting" -H "Authorization: ${TOKEN}"
+
+# Get one setting
+curl -s "${API}/api/account/setting/${SLUG}" -H "Authorization: ${TOKEN}"
+
+# Update one setting -- body is the raw JSON VALUE (not wrapped in an object)
+curl -s -X PUT "${API}/api/account/setting/${SLUG}" \
+  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
+  -d 'true'                             # boolean
+curl ... -d '"finance"'                  # string
+curl ... -d '["mobile","web"]'           # array
+curl ... -d '500'                        # number
+
+# Delete (reset to unset)
+curl -s -X DELETE "${API}/api/account/setting/${SLUG}" -H "Authorization: ${TOKEN}"
+```
+
+For idconfig and rank, use the existing v2 schema endpoints (`schema-manager skill`): `/v2/schema/{table}/idconfig` and `/v2/schema/{table}/rank`.
+
+### Response Shape (account.setting)
+
+```json
+{
+  "slug": "onboarding_question_vertical",
+  "category": "onboarding",
+  "sub_category": "...",
+  "value": "finance",
+  "field": {
+    "type": "string",
+    "label": "...",
+    "name": "...",
+    "description": "..."
+  },
+  "can_be_assigned": true,
+  "subject": "account"
+}
+```
+
+Only `value` is user-owned content. The rest (`field`, `category`, `sub_category`, `subject`, `can_be_assigned`) is server-derived descriptor metadata and is stripped during comparison (see Server-Assigned Field Registry).
+
+### `can_be_assigned` governs writability
+
+Each setting has a boolean `can_be_assigned`. Settings where this is `false` are read-only from the user's perspective -- the API returns **403** on attempted updates:
+
+> `"This setting %q is not editable, talk to your account manager."`
+
+Behavior in this skill:
+- During compare, settings with `can_be_assigned: false` that differ are classified as `drift-readonly` (informational only) and surfaced in the plan -- never as `create` or `update`.
+- The skill never attempts a write on `can_be_assigned: false`. If a user explicitly requests `sync setting <slug>` for a read-only setting, refuse with a clear message.
+- Typical ratio observed: ~75% of settings are writable (`can_be_assigned: true`); the rest require platform-level intervention.
+
+### Non-public settings are invisible
+
+The API filters out non-public settings server-side (`FilterNonPublic(false)` in the handler). The skill does not need to handle `public: false` settings -- they won't appear in responses. Rare exceptions (when `FeatureConductorSchema` is enabled, `schema_user_private_fields` is additionally filtered) are handled by the server.
+
+### Write-path probe
+
+Before the first settings write of a run, probe one setting with a **no-op**: re-submit the destination's current value for a writable setting (pick one with `can_be_assigned: true` and a non-null value). Confirm the endpoint returns 200 and no side effects were logged. This validates the write shape (raw JSON value, not a wrapper) before committing to bulk changes. If the no-op fails, halt the settings phase before any real write.
+
+### Write workflow per-setting
+
+1. **Permission check** -- confirm `can_be_assigned: true` on the source setting. If false, classify as `drift-readonly` and skip.
+2. **Validate** -- the server validates `value` against `field.type` (`setting.Field.Validate(val)`); type mismatches return 400. The skill mirrors this check client-side where possible to avoid round-trips (boolean vs string vs array).
+3. **Write** -- `PUT /api/account/setting/{slug}` with body = the raw value JSON.
+4. **Side-effect awareness** -- some settings trigger platform-level side effects:
+   - Any setting with `ReloadQuery: true` in the server-side definition forces a LinkgridReloadQueryFor on the user table. Expect increased latency on the response.
+   - `content_allowlist_field` / `content_blocklist_field` (exact slugs subject to `SettingContentAllowlistField` / `SettingContentBlocklistField` constants) additionally sync affinity config. Do not batch these with other settings in a way that would obscure a failure.
+   - The API flushes cached resources for jstag after every setting update; brief cache-coldness in the destination is expected.
+5. **Read-after-write verification** -- GET the setting back and confirm `.value` matches the submitted value. This is especially important for settings with server-side transformation (e.g., the server may re-case or sort array elements).
+
+### `idconfig` requires an extra confirmation gate
+
+`idconfig` (identity config per table) controls which schema fields are treated as identity fields for profile matching and merging. Flipping it can re-merge profiles in the destination -- the blast radius is potentially every profile in the account, and the change is not straightforwardly reversible.
+
+**Gate procedure, in addition to the standard confirmation gate:**
+
+1. Render the current → proposed diff inside the plan preview as usual.
+2. After the user approves the plan (the first `yes`), **prompt again**: `This will change profile identity/merge rules on <dst-profile>/<table>. Retype 'confirm idconfig <table>' to proceed.`
+3. Accept only the exact literal string (case-sensitive, whole match). Any other input -- including plain `yes`, `y`, `confirm`, or near-matches -- aborts this `idconfig` write for that table but leaves other settings operations in the plan intact.
+
+Other settings (`rank`, flat `account.setting` keys) go through the standard confirmation gate only.
+
+### `idconfig` 404 handling
+
+A 404 on `GET /v2/schema/{table}/idconfig` means the account has no idconfig set for that table -- not that the endpoint is broken. Error messages from the server may include the string `"Could not find rank settings for table <table>"` (the error message is imprecise; the status code is authoritative). Treat 404 as `idconfig = empty` during compare:
+- If both sides are 404, classify as `skip`.
+- If one side is 404 and the other has an idconfig, classify as `create` (idconfig will be written on the empty side) or `dst-only` (reported, not acted on).
+
+### Settings phase ordering
+
+When a run includes multiple types (e.g., `sync all`), settings are processed **first**, before segments/schema/flows/jobs. Two reasons:
+
+1. Any setting that flips the destination's schema-write mode (e.g., a future `enable_schema_patches` setting if/when it becomes writable) must be applied before the schema phase computes its mode.
+2. `idconfig` changes the profile merge rules that downstream segments and flows depend on.
+
+**After the settings phase completes**, the schema-mode probe (see Schema Fields and Mappings section) must be **re-run** before the schema phase executes. The cached pre-settings schema-mode decision is stale if any setting just altered the mode.
+
+### Traceability
+
+Account settings have no `description` or `notes` field in which to embed an `[account-sync]` trace line. The **manifest** is the sole audit record for settings ops. `--no-trace` has no effect on settings; accept the flag silently. This is a documented limitation, not a bug.
+
+### Selectors
+
+| Invocation | Behavior |
+|------------|----------|
+| `sync settings from <src> to <dst>` | All writable settings (`can_be_assigned: true`) that differ, plus per-table idconfig and rank for every schema table. Bulk-operation gate fires. |
+| `sync setting <slug> from <src> to <dst>` | Single setting by slug. Refuses if `can_be_assigned: false`. |
+| `sync idconfig [<table>] from <src> to <dst>` | Per-table idconfig; `<table>` defaults to all tables. Extra confirmation gate fires per table. |
+| `sync rank [<table>] from <src> to <dst>` | Per-table field rank; `<table>` defaults to all tables. Standard confirmation gate only. |
+
+`compare` variants (`compare settings from <src> to <dst>`, etc.) are read-only per the existing Compare Mode section.
+
+### Manifest op types
+
+Settings ops use these `type` values in the manifest:
+
+- `account.setting` (natural_key = slug)
+- `account.idconfig` (natural_key = table)
+- `account.rank` (natural_key = table)
+
+Same envelope as other ops: `{type, natural_key, op, src_id: null, dst_id: null, status, error, timestamp}`. `src_id` and `dst_id` are always `null` for settings -- no surrogate IDs.
+
 ## Cross-Reference Remapping
 
 Keep an in-run `Map<(type, src_natural_key), dst_id>`. Populate as each node is created or matched to an existing destination. When writing a dependent object, rewrite every recognized reference field from source IDs to destination IDs:
@@ -489,10 +636,12 @@ Applied in this order of defense:
 1. **`--dry-run` / `compare`** -- no writes. The plan is the only output.
 2. **Plan preview + confirmation gate** -- mandatory on any non-dry-run invocation. Follows `../references/confirmation-gate.md`.
 3. **Bulk-operation gate** -- `all` and `--prefix` selectors (and `compare` across all types) require a second confirmation showing the object count and a sample of up to 5 names. If count > 50, require the user to retype `confirm <count>` to proceed.
-4. **Stop-on-first-error** -- no silent continuation past failures. Partial successes remain in the destination; the manifest records `success`, the failed op, and every untouched `pending` op so the user can resume via `resume <manifest>` or `sync ... --resume <manifest>`.
-5. **Read-after-write verification** -- after every successful write, GET the object and diff against expected (Read-After-Write Verification section). Record `server_drift` in the manifest.
-6. **In-flight patch cleanup on halt** -- draft schema patches are never left orphaned; see Error Handling.
-7. **Manifest** -- written to `~/.lytics/sync/<ISO8601>-<src>-to-<dst>.json` on every run (including aborted ones where at least one write succeeded).
+4. **Retype gate for `idconfig`** -- in addition to the standard confirmation, every `idconfig` write requires the user to retype `confirm idconfig <table>` verbatim. See Account Settings > `idconfig` requires an extra confirmation gate.
+5. **Stop-on-first-error** -- no silent continuation past failures. Partial successes remain in the destination; the manifest records `success`, the failed op, and every untouched `pending` op so the user can resume via `resume <manifest>` or `sync ... --resume <manifest>`.
+6. **Read-after-write verification** -- after every successful write, GET the object and diff against expected (Read-After-Write Verification section). Record `server_drift` in the manifest.
+7. **In-flight patch cleanup on halt** -- draft schema patches are never left orphaned; see Error Handling.
+8. **Schema-mode re-probe after settings phase** -- if a run touches settings and schema in the same invocation, re-probe the destination schema-write mode between the two phases. A setting may have flipped `enable_schema_patches` (or similar) and the cached pre-settings decision is stale.
+9. **Manifest** -- written to `~/.lytics/sync/<ISO8601>-<src>-to-<dst>.json` on every run (including aborted ones where at least one write succeeded).
 
 ### Idempotency Invariant
 
@@ -507,6 +656,8 @@ Things that break the invariant if implemented naively, and the mitigations in t
 | Server auto-assigns fields (e.g., `public_name`) not present in source | Strip via server-assigned field registry (Normalization Rules) |
 | Cross-account hex IDs in FilterQL INCLUDE refs differ even when logical refs match | Resolve hex to slug on both sides before comparing (Normalization Rules) |
 | Account-scoped group IDs differ across accounts | Strip `groups` on compare by default (Groups Policy) |
+| Account setting descriptor metadata (`field`, `category`, ...) may drift across deployments | Strip via server-assigned field registry (Normalization Rules); only `value` is compared |
+| `can_be_assigned: false` settings cannot be written -- attempting a correction would loop forever | Classify read-only drift as `drift-readonly`, never `update`; never attempt the write |
 
 If you are implementing a change to the skill and it breaks idempotency, that's the bug.
 
@@ -514,6 +665,9 @@ If you are implementing a change to the skill and it breaks idempotency, that's 
 
 - **401 on either profile** -- fail fast with a clear message naming which profile's token was rejected. Do not proceed.
 - **404 on source object** -- reject the selector clearly; list close matches from the source's object list.
+- **404 on `GET /v2/schema/{table}/idconfig`** -- idconfig is not set on this account, not an error. Error message may misleadingly say `"Could not find rank settings for table <table>"`. Status code is authoritative. Treat as empty idconfig.
+- **403 on `PUT /api/account/setting/{slug}`** with message `"This setting is not editable, talk to your account manager"` -- the setting's `can_be_assigned` is `false`. The skill should have caught this client-side during classification and never issued the write; if this fires, it's a bug in the skill. Halt the settings phase and report.
+- **400 on `PUT /api/account/setting/{slug}`** -- value type mismatch against `field.type`. Surface the server's message; usually the fix is client-side type coercion (e.g., boolean `true` vs string `"true"`).
 - **409 on destination create** -- a natural-key race happened (something was created between the dest-lookup and the write). Re-classify as `update` and re-prompt with an amended plan.
 - **422 on validation** (segment FilterQL, schema patch apply) -- surface the full message and halt. Usually indicates a missing upstream dep that should have been caught in Step 3.
 - **Rate limit (429)** -- respect `../references/api-client.md`'s guidance. Back off briefly and retry once. Do not silently drop an op.
@@ -558,6 +712,11 @@ Required cleanup on halt (must execute before the run exits, regardless of exit 
 - **Schema patches are preferred but not all accounts have them enabled.** The skill detects mode per destination and falls back to direct publish when needed.
 - **Server-side write drift.** Some fields may be normalized by the server after a write. Read-After-Write Verification catches this post-hoc; it does not prevent it. See Known drift classes for the current list.
 - **Groups are not synced by default.** Segment `groups` arrays hold account-scoped IDs and would fail naive copy. Opt in with `--sync-groups` (see Groups Policy).
+- **Account settings have no trace line.** Manifest is the sole audit record for settings ops; `--no-trace` is silently ignored for settings.
+- **`idconfig` can re-merge profiles in the destination.** Blast radius is potentially every profile in the account; the retype gate is the only in-skill mitigation. Coordinate with the dst account owner before syncing `idconfig`.
+- **Read-only settings cannot be forced.** If a setting with `can_be_assigned: false` differs between accounts, the skill classifies it as `drift-readonly` and surfaces it in the plan but never attempts a write. Corrections require platform-level (non-API) intervention.
+- **Some settings have side effects on write.** `ReloadQuery`-flagged settings trigger a linkgrid reload; `content_allowlist_field`/`content_blocklist_field` additionally sync affinity config. Expect higher write latency and brief cache coldness in the destination.
+- **Settings API path is `/api/`, not `/v2/`.** Easy to mistype given the rest of the skill lives at `/v2/`. Also note: the resource is `setting` (singular), not `settings`.
 
 ## Docs Drift (Peer Skills vs Real API)
 
