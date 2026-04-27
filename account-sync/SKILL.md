@@ -58,12 +58,16 @@ Examples:
 - `sync settings from sandbox to prod` (all account settings + per-table idconfig + rank)
 - `sync setting onboarding_question_vertical from sandbox to prod`
 - `sync idconfig user from sandbox to prod`
+- `sync template qualtrics_audience_trigger from sandbox to prod`
+- `sync templates --prefix qualtrics_ from sandbox to prod`
+- `sync all templates from sandbox to prod`
+- `compare templates from sandbox to prod`
 - `compare from sandbox to prod` (full inventory audit; reports by type)
 - `compare segments from sandbox to prod --deep`
 - `resume ~/.lytics/sync/2026-04-16T20-38-25Z-sandbox-to-prod.json`
 
 ### Types
-`segment`, `schema` (fields + mappings), `flow`, `job`, `connection`, `auth`, `settings` (account-level config: `account.setting`, `account.idconfig`, `account.rank` as a bundle), plus the individual settings types `setting` (single key from `account.setting`), `idconfig`, `rank`. Plural forms are accepted (`segments`, `flows`, etc.). `all` works with any type (`sync all flows ...`).
+`segment`, `schema` (fields + mappings), `flow`, `job`, `connection`, `auth`, `template` (webhook templates), `settings` (account-level config: `account.setting`, `account.idconfig`, `account.rank` as a bundle), plus the individual settings types `setting` (single key from `account.setting`), `idconfig`, `rank`. Plural forms are accepted (`segments`, `flows`, `templates`, etc.). `all` works with any type (`sync all flows ...`).
 
 ### Selectors (sync only)
 - **By name/slug**: `sync segment high_value_customers from sandbox to prod`
@@ -128,6 +132,9 @@ Translate the selector into a concrete list of source objects:
 | Single/all job | `GET /v2/job` (add `show_completed=true&show_deleted=false` when broad) |
 | Single/all connection | `GET /v2/connection` |
 | Single/all auth | `GET /v2/auth` |
+| Single template | `GET /v2/template` then filter by `name` (or `GET /v2/template/{id}` if id-like). Source body fetched per-template via `GET /v2/template/{id}` (list response is metadata-only). |
+| All templates | `GET /v2/template`, then `GET /v2/template/{id}` per row to fetch body |
+| Template prefix | List + filter client-side on `name` |
 | All account settings | `GET /api/account/setting` (note: `/api/`, not `/v2/`; singular `setting`) |
 | Single account setting | `GET /api/account/setting/{slug}` |
 | Per-table idconfig | `GET /v2/schema/{table}/idconfig` -- 404 means "not set on this account," not an error |
@@ -153,6 +160,7 @@ Every reference below must be **walked** (traversed as a dep edge). Whether it a
 | Flow | Segments referenced in `conditional`/`split_conditions` step payloads | Parse FilterQL inside each split condition | Yes | Slugs no; hex IDs yes |
 | Flow | Work referenced by `work_export` / `work_export_exit` steps | `work_id` field on the step | Yes -- treat as job/work dep | Yes -- remap via job/work map |
 | Job | `config.segment_id` | Export jobs reference a segment | Yes | Yes |
+| Job | `config.template_id` | Webhook workflow jobs reference a template (`workflow` matches `webhook_triggers` or `webhook_enrichment`) | Yes -- verify the referenced template exists in dst by `(name, type)` | Yes -- via template map |
 | Job | `auth_ids[]` | Every job dep-links its auth providers | Yes -- verify each auth exists in dst by `(label, type)` | Yes |
 | Schema mapping | `field` | Mapping target field | Yes -- verify field exists in dst schema | No (field names are stable) |
 | Schema mapping | `stream` | Mapping source stream | Yes -- verify stream exists in dst (`GET /v2/stream/names`); if missing, block | No |
@@ -178,6 +186,7 @@ For each node in the graph, look up the destination by natural key:
 | Job | `(name, workflow)` | `GET /v2/job?show_all=true` then filter |
 | Connection | `(label, provider_slug)` | `GET /v2/connection` then filter. The user-facing name is stored as `label`, not `name` |
 | Auth | `(label, type)` | `GET /v2/auth` then filter. The user-facing name is stored as `label`, not `name` |
+| Template | `(name, type)` | `GET /v2/template` then filter. Two templates of the same name but different `type` could collide on `name` alone, so `type` is part of the key |
 | Account setting | `slug` (e.g., `onboarding_question_vertical`) | `GET /api/account/setting` then filter, or `GET /api/account/setting/{slug}` for a single key. Flat key/value on the account; no surrogate ID |
 | Account idconfig | `(table)` | `GET /v2/schema/{table}/idconfig`. Table-scoped singleton. 404 means not set on this account (treat as empty, not an error) |
 | Account rank | `(table)` | `GET /v2/schema/{table}/rank`. Table-scoped singleton |
@@ -291,6 +300,7 @@ Strip these fields per type before comparing. They are either server-metadata (t
 | Job | `id`, `aid`, `account_id`, `author_id`, `created`, `updated`, `state`, `work_state`, `last_run` | `auth_ids` (remap + strip for compare; see Cross-Reference Remapping) |
 | Connection | `id`, `aid`, `account_id`, `author_id`, `updated_by_user_id`, `created`, `updated` | `auth_ids` (remap + strip) |
 | Auth | `id`, `account_id`, `user_id`, `provider_id`, `created`, `updated`, `last_accessed_at`, `status`, `unhealthy` | -- |
+| Template | `id`, `aid`, `account_id`, `author_id`, `created`, `updated` | -- |
 | Account setting | `field` (type/label/description metadata, not user value), `subject`, `category`, `sub_category`, `can_be_assigned` -- all server-derived descriptors. Only `value` is user-owned. | -- |
 | Account idconfig | `created`, `modified`, `edit_status` | account-scoped IDs if present |
 | Account rank | `created`, `modified`, `edit_status` | -- |
@@ -308,6 +318,7 @@ Any field that may carry a traceability line must have it stripped before compar
 | Job | `description` |
 | Connection | `description`, `label` (do NOT strip from `label` -- it's the natural key; only append trace to `description`) |
 | Auth | `description` (sensitive; may prefer `--no-trace` for auth) |
+| Template | (none -- template `description` is short and user-owned, and the source body is account-stable; no reliable place to embed a trace line. Manifest is the sole audit record. `--no-trace` is silently accepted.) |
 
 Stripping rule: remove any line matching the regex `^\s*\[account-sync\] .*$` from the field before diffing. The date inside the trace line changes across runs -- without stripping, an idempotent re-run would register every object as `update`.
 
@@ -399,15 +410,36 @@ Before writing a flow:
 Before writing a job:
 1. Remap `config.segment_id` via the in-run map.
 2. Resolve `auth_ids`: look up each by `(label, type)` in the destination. If any is missing, treat the job as blocked and surface an auth blocker in the plan.
-3. Remap any other fields the skill recognizes. For unknown `config` keys, copy them verbatim and include a **"review config carefully"** note on the job's op line. Job configs are workflow-specific; the skill does not attempt to understand every workflow.
-4. Job state is never auto-started. Default to the destination's normal post-create state (workflow-dependent) and let the user start via `job-manager` separately. Surface this in the plan.
-5. Apply traceability append.
-6. Write via `POST /v2/job` or `PUT /v2/job/{workflow}/{id}`.
+3. **If the job's `workflow` is `webhook_triggers` or `webhook_enrichment`, remap `config.template_id` via the in-run template map.** If the source job has a `template_id` and the corresponding template isn't in the destination map, halt with a blocker (the template should have synced earlier in topological order; if it didn't, it was excluded from the selector).
+4. Remap any other fields the skill recognizes. For unknown `config` keys, copy them verbatim and include a **"review config carefully"** note on the job's op line. Job configs are workflow-specific; the skill does not attempt to understand every workflow.
+5. Job state is never auto-started. Default to the destination's normal post-create state (workflow-dependent) and let the user start via `job-manager` separately. Surface this in the plan.
+6. Apply traceability append.
+7. Write via `POST /v2/job` or `PUT /v2/job/{workflow}/{id}`.
 
 ### Connections
 1. Resolve the referenced auth in the destination by `(label, type)`. If missing, block.
 2. Copy the connection config verbatim; apply traceability append.
 3. Write via `POST /v2/connection` or `PUT /v2/connection/{id}`.
+
+### Templates
+Webhook templates (`webhook-template-builder skill`) are referenced by webhook-workflow jobs via `config.template_id`. Templates therefore sync **before** any dependent webhook job; the topological sort enforces this naturally via the dep edge added in Step 3.
+
+1. **Resolve destination by `(name, type)`** (`GET /v2/template`, filter, then `GET /v2/template/{id}` for the body).
+2. **Probe source-body location** on the GET response. The body may be on `data` directly, on `data.body`, on `data.source`, or require `?include_body=true` / `/v2/template/{id}/source`. Cache the working shape per-account.
+3. **Normalize source body on both sides** before diff:
+   - Strip trailing whitespace per line
+   - Normalize line endings to `\n`
+   - Strip trailing blank lines
+   - Strip server-assigned fields (`id`, `aid`, `account_id`, `author_id`, `created`, `updated`)
+4. **Classify**: equal -> `skip`; differ -> `update` (or `conflict` under `--create-only`); missing in dst -> `create`.
+5. **Write**:
+   - Create: `POST /v2/template?name=<>&type=<>&description=<>` -- metadata in query string, body raw via `--data-binary`. Use `Content-Type: text/plain` first, fall back to `application/javascript` on 415 (see `webhook-template-builder skill` Probing Notes).
+   - Update: `PUT /v2/template/{id}?name=<>&type=<>&description=<>` (the API reference says POST but the live endpoint requires PUT; see `webhook-template-builder skill` Probing Notes).
+6. **Read-after-write**: GET the template back, re-normalize, expect zero diff. If the server normalized whitespace differently than we did, record `server_normalized` (not `server_drift`).
+7. **Update the in-run map** `(template, name, type) -> dst_id` so dependent webhook jobs can remap `config.template_id` later in the topological order.
+
+If a webhook job's `config.template_id` references a template that doesn't exist in the destination map (e.g., the user selected the job but excluded the template from the selector), halt with a blocker:
+> "Job `<job-name>` references template `<src_template_name>` (`<src_template_id>`) which is not present in the destination. Re-run with `sync template <src_template_name> from <src> to <dst>` first, or include the template in your selector."
 
 ### Auth Providers
 Auth is the trickiest type. Behavior:
@@ -567,6 +599,7 @@ Keep an in-run `Map<(type, src_natural_key), dst_id>`. Populate as each node is 
 | `split_conditions[].condition` FilterQL | flow step | Slugs no; hex-ID INCLUDEs yes (same rules as segment `segment_ql`) |
 | Flow step `work_id` | flow step (work_export / work_export_exit) | Yes, via job/work map |
 | `config.segment_id` | job | Yes, via segment map |
+| `config.template_id` | job (webhook workflows: `webhook_triggers`, `webhook_enrichment`) | Yes, via template map (`(name, type)` lookup). Only attempt remap when the job's `workflow` is a webhook workflow; for other workflows, `template_id` is not a recognized field and the existing "unknown config keys are copied verbatim" rule applies. |
 | `auth_ids[]` | job, connection | Yes, via auth map (`(label, type)` lookup) |
 | `mapping.field` | schema mapping | No -- field names are stable |
 | `mapping.stream` | schema mapping | No -- stream names are stable; require dest stream to exist |
@@ -658,6 +691,9 @@ Things that break the invariant if implemented naively, and the mitigations in t
 | Account-scoped group IDs differ across accounts | Strip `groups` on compare by default (Groups Policy) |
 | Account setting descriptor metadata (`field`, `category`, ...) may drift across deployments | Strip via server-assigned field registry (Normalization Rules); only `value` is compared |
 | `can_be_assigned: false` settings cannot be written -- attempting a correction would loop forever | Classify read-only drift as `drift-readonly`, never `update`; never attempt the write |
+| Template body whitespace drifts on server re-save (trailing whitespace, line endings) | Trim trailing whitespace per line and normalize line endings to `\n` on both sides before comparing (see Per-Type Writes > Templates) |
+| Two templates with the same name but different `type` collide on natural-key lookup | Disambiguate on `(name, type)`, never `name` alone |
+| Webhook job `config.template_id` from src is an account-scoped hex that doesn't exist in dst | Walk + remap via the in-run template map; if unmapped, halt with a blocker rather than writing a broken reference |
 
 If you are implementing a change to the skill and it breaks idempotency, that's the bug.
 
@@ -717,6 +753,7 @@ Required cleanup on halt (must execute before the run exits, regardless of exit 
 - **Read-only settings cannot be forced.** If a setting with `can_be_assigned: false` differs between accounts, the skill classifies it as `drift-readonly` and surfaces it in the plan but never attempts a write. Corrections require platform-level (non-API) intervention.
 - **Some settings have side effects on write.** `ReloadQuery`-flagged settings trigger a linkgrid reload; `content_allowlist_field`/`content_blocklist_field` additionally sync affinity config. Expect higher write latency and brief cache coldness in the destination.
 - **Settings API path is `/api/`, not `/v2/`.** Easy to mistype given the rest of the skill lives at `/v2/`. Also note: the resource is `setting` (singular), not `settings`.
+- **Webhook templates have no trace line.** The body is the artifact; the `description` is short and user-owned. The manifest is the sole audit record for `template` ops; `--no-trace` is silently ignored. Webhook jobs that reference a template have `config.template_id` automatically remapped via the in-run template map; if a job is synced without its template, the run halts with a blocker rather than writing a broken reference.
 
 ## Docs Drift (Peer Skills vs Real API)
 

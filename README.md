@@ -60,6 +60,7 @@ Profile names are user-chosen. If the file is missing or a profile isn't found, 
 | `integration-setup` | Guided end-to-end setup for data integrations |
 | `connection-manager` | Browse and manage connections, auth providers, and credentials |
 | `job-manager` | Job lifecycle management -- create, pause, resume, bounce, kill |
+| `webhook-template-builder` | Research-driven authoring of Lytics webhook templates -- fetches destination docs, drafts and tests transforms, emits a ready-to-go webhook job blueprint |
 | `export-debugger` | Trace why a user was or wasn't exported to a platform |
 
 ### Schema & Data

@@ -4,6 +4,34 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-04-27
+
+### Added
+
+- **`webhook-template-builder` skill** -- new skill for research-driven authoring
+  of Lytics webhook templates (the JS/Jsonnet transforms that reshape profiles
+  into the body shape an external webhook destination expects). Headline mode
+  is `build`: name a destination (e.g. Qualtrics) or paste a docs URL, and the
+  skill fetches the destination's API docs, infers the required payload +
+  headers + auth model, drafts a `function template(data)` JS template,
+  iterates against `/v2/template/{id}/test` (real profile via `entity-lookup`,
+  synthetic fixture via `schema-discovery`, or user-supplied JSON), saves, and
+  emits a webhook-job config blueprint for `job-manager skill` to consume.
+  Supports both `webhook_triggers` (audience triggers) and
+  `webhook_enrichment` (user enrichment) workflows. SKILL.md captures runtime
+  drift from public docs that bit during end-to-end verification: `template`
+  (not `transformData`) entry-point name, PUT (not POST) for update,
+  required `desired_format` query param for `/test` to succeed, and
+  `try/catch` guards on `ly_*_config` globals.
+- **Account-sync `template` type** -- `account-sync` now copies webhook
+  templates between accounts. Natural key is `(name, type)`. Source body is
+  whitespace-normalized before diff (trailing whitespace trimmed, line endings
+  normalized) so re-runs are idempotent. Webhook-workflow jobs
+  (`webhook_triggers`, `webhook_enrichment`) now have `config.template_id`
+  automatically remapped via the in-run template map; jobs synced without
+  their template halt with a blocker rather than writing a broken reference.
+- **Router entry** in `lytics-agent/SKILL.md` for webhook-template intents.
+
 ## [0.1.0] - 2026-04-20
 
 First tagged release. Adds cross-account metadata coordination.
