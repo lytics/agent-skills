@@ -94,6 +94,10 @@ Route based on keywords and intent:
 **Triggers**: "connection", "auth", "credentials", "provider"
 **Route to**: `connection-manager skill`
 
+### Webhook Templates
+**Triggers**: "webhook template", "send to a webhook", "custom webhook destination", "Qualtrics webhook", "Slack webhook", "transform profile to webhook payload", "build a webhook payload", "webhook integration for", "send profiles to a custom URL"
+**Route to**: `webhook-template-builder skill`
+
 ### Cross-Account Sync / Promotion
 **Triggers**: "copy from sandbox to prod", "promote to prod", "sync to prod", "copy segment to another account", "sandbox to production", "promote audience", "promote flow", "copy schema between accounts", "move segment from X to Y", "sync <anything> from <account> to <account>", "copy account settings", "promote settings", "sync settings between accounts", "copy idconfig", "sync account config", "promote account settings", "copy field rankings between accounts"
 **Route to**: `account-sync skill`
