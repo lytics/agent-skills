@@ -11,8 +11,7 @@ metadata:
 Full job/work lifecycle management -- list, create, update, and control job state (pause, resume, bounce, kill). Jobs represent data integration tasks like imports, exports, and syncs.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -213,4 +212,4 @@ Use the confirmation-gate pattern.
 - **Auth missing**: Suggest creating auth provider first via connection-manager
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`

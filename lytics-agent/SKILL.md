@@ -11,17 +11,7 @@ metadata:
 Top-level intent classifier and dispatcher for Lytics CDP operations. Analyzes the user's request and routes to the appropriate specialized skill.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token (required)
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
-
-## Pre-flight Check
-Before routing, verify the environment is configured:
-```bash
-if [ -z "$LYTICS_API_TOKEN" ]; then
-  echo "LYTICS_API_TOKEN is not set. Please set it with: export LYTICS_API_TOKEN=your_token"
-  exit 1
-fi
-```
+Requires authenticated API access. See `../references/auth.md` for credential resolution and pre-flight checks.
 
 ## Intent Classification
 
@@ -139,8 +129,8 @@ Ask: "Would you like to see your schema fields, recent streaming events, or look
 ## Shared Conventions
 
 All skills follow these conventions:
-- **Auth**: `Authorization: $LYTICS_API_TOKEN` header on all API calls
-- **Base URL**: `${LYTICS_API_URL:-https://api.lytics.io}`
+- **Auth**: See `../references/auth.md` for credential resolution
+- **Base URL**: See `../references/api-client.md` for URL construction
 - **Reads**: Execute immediately, display results
 - **Writes**: Always use confirmation-gate pattern (summary + payload + approval)
 - **Errors**: Parse API errors, suggest fixes, never silently fail

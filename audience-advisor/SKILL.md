@@ -15,8 +15,7 @@ Supports two modes:
 - **Improve existing**: "How can I improve my 'High Value Customers' segment?"
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Flow
 
@@ -271,4 +270,4 @@ After creation, offer to run an `audience-snapshot skill` to show the final audi
 
 ## Dependencies
 - Composes: `audience-builder skill`, `audience-snapshot skill`, `segment-manager skill`, `schema-discovery skill`
-- References: `../references/api-client.md`, `../references/field-types.md`, `../references/filterql-grammar.md`
+- References: `../references/auth.md`, `../references/api-client.md`, `../references/field-types.md`, `../references/filterql-grammar.md`

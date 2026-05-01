@@ -17,8 +17,7 @@ Deep diagnostic profile exploration. Answers questions like:
 Goes beyond basic profile lookup by cross-referencing profile data against segment FilterQL to show exactly which conditions match or fail.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - Identity field and value (e.g., `email`, `user@example.com`)
@@ -203,4 +202,4 @@ For each condition, always show:
 
 ## Dependencies
 - Composes: `entity-lookup skill`, `segment-manager skill`
-- References: `../references/filterql-grammar.md`, `../references/api-client.md`
+- References: `../references/filterql-grammar.md`, `../references/auth.md`, `../references/api-client.md`

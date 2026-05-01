@@ -17,8 +17,7 @@ Two webhook workflows are supported:
 - **`webhook_enrichment`** (`--workflow=enrichment`): request/response; sends a profile and lands the response into a stream.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Invocation
 
@@ -399,5 +398,5 @@ No confirmation needed for a test against an already-saved template -- it's read
 
 ## Dependencies
 - Composes: `entity-lookup skill`, `schema-discovery skill`, `connection-manager skill`, `job-manager skill`
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
 - Related: `integration-setup skill` (orchestrator hand-off pattern), `integration-advisor skill` (research-driven advisor pattern)

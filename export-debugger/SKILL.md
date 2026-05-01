@@ -11,8 +11,7 @@ metadata:
 Diagnoses why a specific user was or wasn't exported to an external platform. Traces through the full export pipeline: segment membership -> job status -> flow state -> quiet windows -> export logs. Read-only diagnostic.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - User identity (field + value, e.g., `email user@example.com`)
@@ -178,4 +177,4 @@ queued, not dropped.
 ## Dependencies
 - Composes: `job-manager skill`, `entity-lookup skill`, `segment-manager skill`, `flow-manager skill`
 - Related: `profile-investigator skill` (for segment membership diagnosis)
-- References: `../references/api-client.md`
+- References: `../references/auth.md`, `../references/api-client.md`

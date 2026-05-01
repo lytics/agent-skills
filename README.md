@@ -12,25 +12,10 @@ npx skills add lytics/agent-skills
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LYTICS_API_TOKEN` | Yes | Lytics API token for authentication |
+| `LYTICS_API_TOKEN` | Yes | Lytics API token for authentication ([create one](https://docs.lytics.com/docs/access-tokens)) |
 | `LYTICS_API_URL` | No | Custom API base URL (defaults to Lytics production API) |
 
-### Cross-Account Profile Config (for `account-sync`)
-
-The `account-sync` skill operates against two accounts per run and reads credentials from a profile file rather than the session env vars.
-
-**Path:** `~/.lytics/accounts.toml`
-
-```toml
-[sandbox]
-token = "lyt_xxx"
-url = "https://api.lytics.io"   # optional
-
-[prod]
-token = "lyt_yyy"
-```
-
-Profile names are user-chosen. If the file is missing or a profile isn't found, `account-sync` prompts for the token in-session (not persisted).
+See [`references/auth.md`](references/auth.md) for the full authentication contract, including multi-account, SaaS, and multi-agent deployment contexts.
 
 ## Available Skills
 

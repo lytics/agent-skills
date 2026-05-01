@@ -11,8 +11,7 @@ metadata:
 Answers "is my data flowing correctly?" with a single command. Aggregates health signals across streams, jobs, schema, and event quota into a unified, actionable report. Purely read-only.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Flow
 
@@ -182,4 +181,4 @@ Generate specific, actionable recommendations based on findings:
 
 ## Dependencies
 - Composes: `stream-inspector skill`, `job-manager skill`, `schema-manager skill`
-- References: `../references/api-client.md`
+- References: `../references/auth.md`, `../references/api-client.md`

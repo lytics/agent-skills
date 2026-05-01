@@ -11,8 +11,7 @@ metadata:
 Provides an analytics view of an audience segment -- what do the people in this segment look like? Shows field value distributions, coverage rates, numeric statistics, and highlights notable patterns. This is a read-only operation.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - Segment name or ID (required)
@@ -190,5 +189,5 @@ Present differences:
 - **Stale data**: If `last_updated` is old, suggest refetching with `cached=false`
 
 ## Dependencies
-- Uses: `../references/api-client.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`
 - Related: `segment-manager skill` for segment lookup, `audience-builder skill` for creating segments

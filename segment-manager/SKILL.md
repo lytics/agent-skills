@@ -11,8 +11,7 @@ metadata:
 Full segment lifecycle management -- list, get, create, update, delete, validate FilterQL, and estimate segment size.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -176,5 +175,5 @@ Before creating/updating a segment:
 - **Very large segment**: Note the size and ask user to confirm intent
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`
 - References: `../references/filterql-grammar.md`

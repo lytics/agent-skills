@@ -11,8 +11,7 @@ metadata:
 Guide users through setting up a complete data integration -- from creating auth credentials to configuring connections and creating jobs. Handles both imports (data flowing into Lytics) and exports (data flowing out to external platforms).
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - Description of the desired integration (platform, direction, data type)
@@ -104,4 +103,5 @@ Report success with links to each created resource.
 
 ## Dependencies
 - Composes: `connection-manager skill`, `job-manager skill`, `../references/confirmation-gate.md`
+- References: `../references/auth.md`
 - Related: `audience-builder skill` (for creating segments to export)

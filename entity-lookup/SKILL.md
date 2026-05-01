@@ -11,8 +11,7 @@ metadata:
 Look up individual user profiles by identity field. Returns the full profile including all fields, segment memberships, and metadata.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -87,4 +86,4 @@ Use the confirmation-gate pattern. Warn that:
 - **Multiple matches**: If multiple profiles match, present all and ask user to select
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md` (for deletes only)
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md` (for deletes only)

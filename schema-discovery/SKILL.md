@@ -11,8 +11,7 @@ metadata:
 Fetch and interpret the profile schema to find fields that match natural language descriptions. Used by other skills (especially audience-builder) to map user intent to actual schema fields.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - Natural language description of the data concepts to find (e.g., "country", "purchase history", "email engagement")
@@ -98,4 +97,4 @@ Common natural language to field name patterns:
 - If the table doesn't exist, report and suggest `user` as default
 
 ## Dependencies
-- References: `../references/api-client.md`, `../references/field-types.md`
+- References: `../references/auth.md`, `../references/api-client.md`, `../references/field-types.md`
