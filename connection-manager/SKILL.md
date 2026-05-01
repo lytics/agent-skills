@@ -11,8 +11,7 @@ metadata:
 Browse and manage connections (external system configurations) and auth providers (credentials/tokens). Connections define how Lytics communicates with external platforms.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -115,4 +114,4 @@ When setting up a new integration:
 - **Provider not found**: List available providers
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`

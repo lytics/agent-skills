@@ -11,8 +11,7 @@ metadata:
 Browse and modify the profile schema -- fields, mappings, identity configuration, and field rankings. Use this when users want to understand their data model, add new fields, or modify field mappings.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -354,5 +353,5 @@ Every write operation MUST follow this sequence:
 - **Publish failures**: Show error details, suggest checking field validity
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`
 - References: `../references/field-types.md`

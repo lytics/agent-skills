@@ -11,34 +11,7 @@ metadata:
 Copy metadata between two Lytics accounts safely. Supports segments, schema fields and mappings, flows, jobs, connections, and auth providers. Handles the hard parts that break naive copy: internal-ID remapping, dependency traversal, upsert-by-natural-key, schema-patches workflow, and OAuth pauses.
 
 ## Environment
-Unlike other skills, `account-sync` operates against **two** accounts per invocation. It does not rely on the session's `LYTICS_API_TOKEN`; instead it resolves credentials per-account from a profile config file.
-
-### Profile Config
-
-**Path:** `~/.lytics/accounts.toml`
-
-```toml
-[sandbox]
-token = "lyt_xxx"
-url = "https://api.lytics.io"   # optional; defaults to https://api.lytics.io
-
-[prod]
-token = "lyt_yyy"
-```
-
-Profile names are user-chosen; `sandbox` and `prod` are conventions, not requirements.
-
-**Fallback:** if the file is missing, unreadable, or the requested profile name is not found, prompt the user to paste the token for that profile in-session. Session-only; never persist a prompted token.
-
-**Per-call env overrides:** when making API calls, export `LYTICS_API_TOKEN` / `LYTICS_API_URL` for the active profile in a subshell, e.g.:
-
-```bash
-LYTICS_API_TOKEN="$SRC_TOKEN" LYTICS_API_URL="$SRC_URL" \
-  curl -s "${LYTICS_API_URL}/v2/segment/${SEGMENT_ID}" \
-  -H "Authorization: ${LYTICS_API_TOKEN}"
-```
-
-This keeps per-call behavior compatible with `../references/api-client.md` while supporting two accounts in one run.
+Unlike other skills, `account-sync` operates against **two** accounts per invocation. See the **Multi-Account** section of `../references/auth.md` for credential resolution (profile config, fallback prompts, per-call env overrides).
 
 ## Invocation
 
@@ -734,7 +707,7 @@ Required cleanup on halt (must execute before the run exits, regardless of exit 
 - Stream names are case-sensitive and must match exactly.
 
 ## Dependencies
-- Uses: `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
+- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
 - References: `../references/filterql-grammar.md` (for `INCLUDE slug` parsing)
 - Composes knowledge from: `segment-manager skill`, `schema-manager skill`, `flow-manager skill`, `job-manager skill`, `connection-manager skill`
 

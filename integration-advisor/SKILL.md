@@ -16,8 +16,7 @@ Supports:
 - **Enrichment**: "Enrich profiles with Clearbit data"
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Integration Architecture
 
@@ -236,4 +235,5 @@ Common Lytics-to-platform field mappings:
 
 ## Dependencies
 - Composes: `connection-manager skill`, `job-manager skill`, `schema-discovery skill`, `../references/confirmation-gate.md`
+- References: `../references/auth.md`
 - Related: `audience-advisor skill`, `audience-builder skill` (for creating segments to export)

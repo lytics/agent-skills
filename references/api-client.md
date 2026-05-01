@@ -8,15 +8,13 @@ description: Shared HTTP calling conventions, auth, and response parsing for Lyt
 ## Purpose
 Defines shared HTTP conventions for all skills that call the Lytics REST API. This skill is referenced (not invoked) by other skills.
 
-## Environment
-- `LYTICS_API_TOKEN` -- API authentication token (required)
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
-
 ## Authentication
+
+See `auth.md` for credential resolution across deployment contexts.
 
 All requests include the authorization header:
 ```
-Authorization: $LYTICS_API_TOKEN
+Authorization: <token>
 ```
 
 ## Making Requests
@@ -53,7 +51,7 @@ Parse with `jq`:
 
 1. Check HTTP status code -- anything >= 400 is an error
 2. Extract `.message` from response body for human-readable error
-3. For 401: token is invalid or missing -- ask user to check `LYTICS_API_TOKEN`
+3. For 401: token is invalid or missing -- see `auth.md` Rules for context-appropriate response
 4. For 429: rate limited -- wait briefly and retry once
 5. For 500: server error -- retry once with backoff, then report to user
 

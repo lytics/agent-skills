@@ -11,8 +11,7 @@ metadata:
 The primary end-to-end skill. Takes a natural language audience description and produces a validated, sized, and confirmed segment. Composes schema-discovery, filterql-builder, segment-manager, and confirmation-gate.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Inputs
 - Natural language description of the desired audience
@@ -179,4 +178,4 @@ If the user wants to update an existing segment:
 
 ## Dependencies
 - Composes: `schema-discovery skill`, `filterql-builder skill`, `segment-manager skill`, `../references/confirmation-gate.md`
-- References: `../references/filterql-grammar.md`, `../references/field-types.md`
+- References: `../references/auth.md`, `../references/filterql-grammar.md`, `../references/field-types.md`

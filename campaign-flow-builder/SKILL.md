@@ -13,8 +13,7 @@ Guides users from business intent ("I want a welcome email series") to a complet
 Flows are the most complex Lytics object -- this skill makes them approachable.
 
 ## Environment
-- `LYTICS_API_TOKEN` -- API authentication token
-- `LYTICS_API_URL` -- Base URL (default: `https://api.lytics.io`)
+Requires authenticated API access. See `../references/auth.md` for credential resolution.
 
 ## Flow API Format
 
@@ -295,4 +294,4 @@ TRIGGER (on_segment_entry: "High Intent")
 
 ## Dependencies
 - Composes: `segment-manager skill`, `audience-builder skill`, `job-manager skill`
-- References: `../references/filterql-grammar.md`, `../references/confirmation-gate.md`, `../references/api-client.md`
+- References: `../references/filterql-grammar.md`, `../references/confirmation-gate.md`, `../references/auth.md`, `../references/api-client.md`
