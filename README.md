@@ -12,7 +12,7 @@ npx skills add lytics/agent-skills
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LYTICS_API_TOKEN` | Yes | Lytics API token for authentication |
+| `LYTICS_API_TOKEN` | Yes | Lytics API token for authentication ([create one](https://docs.lytics.com/docs/access-tokens)) |
 | `LYTICS_API_URL` | No | Custom API base URL (defaults to Lytics production API) |
 
 See [`references/auth.md`](references/auth.md) for the full authentication contract, including multi-account, SaaS, and multi-agent deployment contexts.

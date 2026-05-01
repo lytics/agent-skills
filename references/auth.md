@@ -22,7 +22,7 @@ Credentials come from environment variables set by the user before invoking a sk
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LYTICS_API_TOKEN` | yes | API authentication token |
+| `LYTICS_API_TOKEN` | yes | API authentication token ([how to create one](https://docs.lytics.com/docs/access-tokens)) |
 | `LYTICS_API_URL` | no | Base URL (default: `https://api.lytics.io`) |
 
 Pre-flight check (router skills only):
