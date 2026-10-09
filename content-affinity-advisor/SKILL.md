@@ -1,6 +1,6 @@
 ---
 name: content-affinity-advisor
-description: Assess, advise on, and curate Lytics content affinity -- context layers, topics, Affinities (supertopics), and topic-based micro-audiences. Use when the user wants to audit their topic map, clean up or enrich topics, design Affinities, build audiences from content interest, or execute a content/topic curation plan on an existing setup.
+description: Assess, advise on, and curate Lytics content affinity -- context layers, topics, Supertopics, and topic-based micro-audiences. Use when the user wants to audit their topic map, clean up or enrich topics, design Supertopics, build audiences from content interest, or execute a content/topic curation plan on an existing setup.
 metadata:
   arguments: mode and target -- assess [context-layer id|all] [--site=<url>], advise [assessment file], execute <plan file> [action ids] [--dry-run], or a natural-language content/topic question
 ---
@@ -8,7 +8,7 @@ metadata:
 # Content Affinity Advisor
 
 ## Purpose
-Help a Lytics customer get a topic map that actually means something, then turn it into Affinities and audiences they can activate.
+Help a Lytics customer get a topic map that actually means something, then turn it into Supertopics and audiences they can activate.
 
 Topics are the hardest part of content affinity to get right:
 - The topic map Lytics produces is a starting point, not an answer. It depends on how pages were scraped, what the language-processing classifier (Google NLP by default) made of them, and whether the customer controls their own site markup.
@@ -19,9 +19,9 @@ This skill does three things, each in its own reference file:
 
 | Mode | What it does | Token needed | File |
 |---|---|---|---|
-| `assess` | Audits one or more existing context layers: content, topics, Affinities, profile scores, downstream use. Optionally checks the live website. Produces a scorecard with evidence. | Read-only view token | `assessment.md`, `site-assessment.md` |
-| `advise` | Turns the assessment into an advisement plan: a target taxonomy, proposed Affinities, micro-audiences, and an ordered list of actions a person or an agent can carry out. | Read-only view token | `advisement.md` |
-| `execute` | Carries out approved plan actions using the playbooks: block or allow topics, custom topic rules, page-level topic fixes, Affinities, re-classification, audience handoff. | Write token with **only** the scopes each action needs (see `execution.md`) | `execution.md` |
+| `assess` | Audits one or more existing context layers: content, topics, Supertopics, profile scores, downstream use. Optionally checks the live website. Produces a scorecard with evidence. | Read-only view token | `assessment.md`, `site-assessment.md` |
+| `advise` | Turns the assessment into an advisement plan: a target taxonomy, proposed Supertopics, micro-audiences, and an ordered list of actions a person or an agent can carry out. | Read-only view token | `advisement.md` |
+| `execute` | Carries out the approved `API` actions: topic and exact-page blocks, Supertopics it creates, and audience handoff. Writes step-by-step instructions for everything done in the UI or by a person (custom topic rules, page topic edits, re-classification, domain and path blocks). | Write token with **only** the scopes each action needs (see `execution.md`) | `execution.md` |
 
 Shared guidance:
 - `topic-curation-principles.md`: what a good topic map looks like, and the judgement rules every mode uses.
@@ -32,11 +32,9 @@ Load only the files the current mode needs.
 ## Scope: what this skill does and does not do
 **In scope:** assessing, fixing and maintaining an **existing** content setup.
 - topics and their quality
-- topic block lists and content collection filters (add-only)
-- content collection filters (domains, paths, pages)
-- custom topic rules
-- page-level topic edits and re-classification
-- Affinities
+- topic block lists and exact-page blocks (add-only); domain and path blocks are human handoffs, because they delete content records
+- custom topic rules, page-level topic edits and re-classification (advised and written as UI steps; not automated)
+- Supertopics
 - topic micro-audience design, handed off for creation
 - tuning settings on an existing context layer
 
@@ -49,19 +47,19 @@ Load only the files the current mode needs.
 `assess` may *recommend* this kind of setup when the evidence calls for it (for example, a retail site whose URLs can't carry a taxonomy). It is written as a `setup_recommendation` action for a person or a dedicated setup skill. `execute` never creates layers, streams or schema.
 
 **Non-destructive, always.** This skill never makes a `DELETE` API call, under any mode, token or instruction. It only adds or creates; it never removes. Anything destructive is written up as a **`human_handoff`** action, with exact steps for a person to carry out themselves. That covers:
-- deleting or retiring an Affinity
+- deleting or retiring an Supertopic
 - deleting or changing a custom topic rule
 - zeroing or removing a topic on a page
 - removing entries from a block or allow list
-- removing topics from an existing Affinity
+- removing topics from an existing Supertopic
 - unpublishing anything
 - deleting content records
 
-**Only changes what it created.** The agent may modify only objects it created itself, tracked in a ledger. Existing audiences, Affinities, rules, collections and layers are read-only to it, even for "additive" changes like adding a recency guard or a topic: those change who is in a live audience, so they're human handoffs. To understand a narrower version of an existing audience, the agent copies its FilterQL into a read-only size check. It never edits the audience.
+**Only changes what it created.** The agent may modify only objects it created itself, tracked in a ledger. Existing audiences, Supertopics, rules, collections and layers are read-only to it, even for "additive" changes like adding a recency guard or a topic: those change who is in a live audience, so they're human handoffs. To understand a narrower version of an existing audience, the agent copies its FilterQL into a read-only size check. It never edits the audience.
 
 **No personal details.** Plans, handoffs, scripts and HTTP requests name **roles** (customer Lytics admin, customer web team, Lytics account team), never a person's name or email, even when the agent knows who the user is.
 
-**Never touched, under any mode:** profiles, schema fields and mappings, identity config, streams, jobs, connections or auth, and any account setting outside the content allowlist in `execution.md`. `execute` refuses any request outside the content, topic and Affinity boundary, even if the token would allow it.
+**Never touched, under any mode:** profiles, schema fields and mappings, identity config, streams, jobs, connections or auth, and any account setting outside the content allowlist in `execution.md`. `execute` refuses any request outside the content, topic and Supertopic boundary, even if the token would allow it.
 
 ## Environment
 Requires authenticated API access. See `../references/auth.md` for credential resolution.

@@ -17,7 +17,7 @@ No API writes happen in this mode.
      - the site-assessment verdict and sitemap sections
      - the strongest clean topics
      - the opportunity findings
-     - `POST /v2/ai/supertopic/suggest`, only if a `v2_content_manage` token is available
+     - **Not** `POST /v2/ai/supertopic/suggest`: it creates draft Supertopics, so it's a write. If AI suggestions are wanted, add a `suggest_affinities` action to the plan for `execute`.
 2. **Taxonomy source, by site type** (see `site-assessment.md`):
 
    | Site / verdict | Primary taxonomy source |
@@ -43,7 +43,7 @@ Get the user's agreement on the target before writing actions. If you can't ask,
 2. Clean the topic set.
 3. Fill the gaps (rules, meta-tag spec, a few page edits).
 4. Re-classify.
-5. Build Affinities.
+5. Build Supertopics.
 6. Design new micro-audiences.
 7. Activate.
 8. Verify.
@@ -52,25 +52,25 @@ Get the user's agreement on the target before writing actions. If you can't ask,
 ### Keep it short: group actions into batches
 One reviewable decision per action, not one API call per action. Group items that share the same type, risk and owner into a single action with an `items` list. For example:
 - "Create 11 section topic rules" is one action with 11 items.
-- "Create 11 Affinities as drafts" is one action.
-- "Publish the 11 Affinities" is one action.
+- "Create 11 Supertopics as drafts" is one action.
+- "Publish the 11 Supertopics" is one action.
 
 Split a batch only when its items differ in risk or owner. **Target: about 15 to 25 actions for a small or medium site.** If you're over 30, group harder.
 
 ### What the agent may and may not propose for itself
 Read the safety rules in `execution.md`. In short:
 - **The agent may propose:**
-  - creating new things: rules, Affinities as drafts, new audiences
+  - creating new things: rules, Supertopics as drafts, new audiences
   - merge-only blocks of junk sources
   - blocks of topics that nothing pre-existing depends on
 - **These are always `human_handoff`:**
-  - **any change to something the skill didn't create**, including existing audiences, Affinities and rules (even adding a guard or topics)
+  - **any change to something the skill didn't create**, including existing audiences, Supertopics and rules (even adding a guard or topics)
   - any removal, shrink, unpublish or delete
   - blocking a topic that something pre-existing uses
 - **Existing audiences** that need a fix (no recency guard, dead topics) get a `human_handoff`. It shows the proposed new FilterQL and its size, measured by **copying** the audience's FilterQL into a read-only size check (`GET /api/segment/size?segments=...`). The live audience is never edited. Optionally, also propose a **new** guarded audience as an additive alternative the owner can switch to.
 
 ### When topic scores aren't usable yet
-If the assessment shows topic scores can't support audiences today (most traffic lands on pages with no usable topic), you may propose **interim** new audiences built from the visited-URL field instead (e.g. `FILTER AND (urls CONTAINS "/faucet", <recency>) FROM user`), one per interest area. Confirm the field's name in the schema. Label them "interim, URL-based", and pair each with the Affinity audience that will replace it once re-scoring completes.
+If the assessment shows topic scores can't support audiences today (most traffic lands on pages with no usable topic), you may propose **interim** new audiences built from the visited-URL field instead (e.g. `FILTER AND (urls CONTAINS "/faucet", <recency>) FROM user`), one per interest area. Confirm the field's name in the schema. Label them "interim, URL-based", and pair each with the Supertopic audience that will replace it once re-scoring completes.
 
 ### Content arriving from non-web streams
 If a large share of content records came from a sync or ad stream (not the web tag), write a `support_request` asking the Lytics account team to confirm the source and stop that stream feeding the content table. The agent can't change stream routing.
@@ -100,9 +100,9 @@ actions:
     evidence: assessment.json#classification_fit
     how: ui                     # ui | api | customer_site | lytics_support | human
     owner: customer Lytics admin    # a ROLE, never a person's name
-    access: ui_admin            # view | v2_account_settings_manage | v2_content_manage | v2_segment_manage | ui_admin | admin | none
+    access: none                # view | v2_account_settings_manage | v2_content_manage | v2_segment_manage | none (for ui / human / support rows)
     risk: high                  # low | medium | high
-    risk_note: Needs admin access; adds topics to ~84 pages, which shifts scores for anyone who visited them.
+    risk_note: Done by hand in the Lytics UI; adds topics to ~84 pages, which shifts scores for anyone who visited them.
     items:
       - { name: Faucet, filter: 'FILTER url CONTAINS "/faucet" FROM content', topics: [{label: Faucet Filters, value: 1.0}], pages_matched_today: 9 }
       # ...
@@ -114,22 +114,23 @@ actions:
 ```
 - **`owner`** is always a role: `customer Lytics admin`, `customer web team`, `customer marketing`, `Lytics account team`, or `Lytics support`. **Never a person's name or email,** even if you know who the user is.
 - **`person_name: true`** on an item (for example, one label in a block list) marks it as a person's name. The `.yaml`/`.json` carry the exact label, because the action needs it. Prose, logs and printed output show `[person name]` instead, and generated scripts must honour the flag.
-- **`how: human`** is used for every `human_handoff`. **`how: ui`** marks steps done by hand in the Lytics UI because there's no narrow API permission.
+- **`how: human`** is used for every `human_handoff`. **`how: ui`** marks steps done by hand in the Lytics UI. Custom topic rules, page topic edits and re-classification are always `ui` (or `lytics_support`), never `api`.
+- **Domain and path blocks are always `type: human_handoff`.** Changing either setting hard-deletes matching content records. The handoff shows the deletion count for every entry in the full list (`execution.md`).
 
 ## New micro-audiences
-For each Affinity (or high-value single topic), propose **new** tiers. Never edits to existing audiences.
+For each Supertopic (or high-value single topic), propose **new** tiers. Never edits to existing audiences.
 ```yaml
   - id: A14
     phase: audiences
     type: create_audience
-    title: New interest audiences, 2 tiers per Affinity (22 audiences)
+    title: New interest audiences, 2 tiers per Supertopic (22 audiences)
     how: api
     owner: customer marketing
     access: v2_segment_manage
     items:
       - name: "Faucet | High interest | Active 90d"
         filterql: 'FILTER AND (lytics_rollup.`Faucet` >= 0.8, <recency field> > "now-90d") FROM user'
-        estimated_size_today: <read-only size using the member topics; "estimate before the Affinity exists">
+        estimated_size_today: <read-only size using the member topics; "estimate before the Supertopic exists">
         reach: { email: <n>, ad_ids: <n>, anonymous_web: <n> }
     handoff: audience-builder
 ```
@@ -138,13 +139,13 @@ For each Affinity (or high-value single topic), propose **new** tiers. Never edi
   | Channel | Recommended guard |
   |---|---|
   | Ad platforms, on-site personalization | Recent **site activity** (for example 30 or 90 days), on a field that reflects real visits. See `assessment.md` on fields fed by syncs. |
-  | Email, SMS | Site visits are often rare for these people. Use the Affinity plus **channel engagement or consent** (an email field, opt-in, recent opens if they exist). Don't require a site visit. Size it with and without the guard, and show both. |
+  | Email, SMS | Site visits are often rare for these people. Use the Supertopic plus **channel engagement or consent** (an email field, opt-in, recent opens if they exist). Don't require a site visit. Size it with and without the guard, and show both. |
   | Anything | If the only recency field is also fed by sync streams, say so, and label it "last seen anywhere". |
 
-- **Tiers must actually separate people.** Scores are relative to each person's top interest, so most active people score high on their main Affinity. Before proposing score tiers, check the distribution: `GET /api/segment/fieldinfo?segments=<active FilterQL>&fields=lytics_rollup`, or size ≥ 0.8 against ≥ 0.5.
-  - If **more than ~80%** of the Affinity's active holders are already ≥ 0.8, don't use score tiers. Use **one** score cut (≥ 0.5), and tier by **engagement** instead: recency window (30 days versus 90 days), or depth (visits, or pages in that section, if a count field exists).
+- **Tiers must actually separate people.** Scores are relative to each person's top interest, so most active people score high on their main Supertopic. Before proposing score tiers, check the distribution: `GET /api/segment/fieldinfo?segments=<active FilterQL>&fields=lytics_rollup`, or size ≥ 0.8 against ≥ 0.5.
+  - If **more than ~80%** of the Supertopic's active holders are already ≥ 0.8, don't use score tiers. Use **one** score cut (≥ 0.5), and tier by **engagement** instead: recency window (30 days versus 90 days), or depth (visits, or pages in that section, if a count field exists).
   - State which basis you chose and why, with the numbers.
-- **Existing audiences with a different purpose** (for example, email audiences that use a topic as one condition): adding a site-visit guard can wipe them out. Size the copy first. If it collapses, recommend replacing the topic condition with the new Affinity (as a human handoff), not adding a guard.
+- **Existing audiences with a different purpose** (for example, email audiences that use a topic as one condition): adding a site-visit guard can wipe them out. Size the copy first. If it collapses, recommend replacing the topic condition with the new Supertopic (as a human handoff), not adding a guard.
 - **Record reach per channel.** Drop or merge tiers too small for the intended channel.
 
 ## The plan document
@@ -176,7 +177,7 @@ Sections, each with its explainer:
      | Action | What changes, in plain words |
      | How | `API` (an agent can do it), `UI` (by hand in Lytics), `Web team`, `Support` (Lytics does it), or `Person` (a handoff: destructive or touches existing setup) |
      | Owner | The role that approves or carries it out |
-     | Access | The permission needed: `none`/`view` (read only), a named permission, `UI admin`, or `admin` |
+     | Access | The permission an agent needs for `API` rows: `view` (read only) or a named permission. `none` for rows a person does |
      | Risk | Low / Medium / High, with one line on what could go wrong |
      | Status | `proposed` until someone approves it |
 
