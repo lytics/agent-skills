@@ -78,7 +78,10 @@ The `:?` guards make a missing profile variable fail loudly instead of falling t
 own_aid='.data | if length == 1 then .[0].aid else (map(select(.aid == .parentaid)) | .[0].aid) end'
 SRC_AID=$(src /v2/account | jq -r "$own_aid")
 DST_AID=$(dst /v2/account | jq -r "$own_aid")
-[ -n "$SRC_AID" ] && [ "$SRC_AID" != null ] && [ "$SRC_AID" != "$DST_AID" ] || echo "refusing: source and destination resolve to the same account (or failed to resolve)"
+case "$SRC_AID:$DST_AID" in
+  *[!0-9:]*|:*|*:) echo "refusing: an account failed to resolve" ;;
+  *) [ "$SRC_AID" != "$DST_AID" ] || echo "refusing: source and destination are the same account" ;;
+esac
 ```
 
 ## Rules

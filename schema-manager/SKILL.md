@@ -56,8 +56,10 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/fie
 # Update field -- this is a full replace, not a merge. Any key you omit is reset,
 # so `is_identifier` / `is_pii` silently become false if left out.
 # GET the field first, change only what the user asked for, and POST the whole object back.
+# GET reports a server-filled `mergeop` on identifier fields, but POST rejects a merge op on an
+# identifier ("Identifier Field cannot define a Merge Operation.") -- drop it for identifiers.
 curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/field/${FIELD_ID}" \
-  -H "Authorization: ${LYTICS_API_TOKEN}" | jq '.data' > field.json
+  -H "Authorization: ${LYTICS_API_TOKEN}" | jq '.data | if .is_identifier then del(.mergeop) else . end' > field.json
 # ...edit field.json...
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/field/${FIELD_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \

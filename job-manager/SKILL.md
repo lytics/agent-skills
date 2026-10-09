@@ -27,7 +27,7 @@ Status values the API returns: `running`, `sleeping`, `paused`, `pausing`, `init
 | `workflow` | - | Filter by workflow slug |
 | `auth_ids` | - | Filter by auth IDs |
 | `show_completed` | false | Include completed jobs |
-| `show_deleted` | false | Include deleted jobs |
+| `show_all` | false | Include deleted (killed) jobs -- there is no working `show_deleted` filter |
 | `show_hidden` | false | Include hidden jobs |
 | `show_all` | false | Show everything (sets completed, deleted, hidden to true) |
 | `show_state` | false | Include WorkState details in response |
