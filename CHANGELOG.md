@@ -23,6 +23,55 @@ versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   gone), topic settings must be written to the legacy `topic_blacklist` /
   `topic_whitelist` keys, custom topic rules need an explicit relevance
   `value`, and scores are normalized per user with no decay.
+  Hardened after a blind test run on a live account:
+  - Assessment runs entirely on a read-only view token, using GET-only query
+    recipes (ad-hoc `GET /api/segment/size?segments=`, segment `fieldinfo`,
+    and content `scan`), with a documented fallback for every content
+    endpoint that returns 403 to granular view tokens.
+  - New `site-assessment.md` covers site type (brand, content, retail),
+    sitemap coverage, polite page sampling, a URL-structure-as-taxonomy
+    verdict, and inferred topics.
+  - New assessment checks: zero-relevance noise, which stream feeds the
+    content table, stale interest (no decay), and known versus anonymous
+    reach.
+  - `execute` opens with a scope, token and risk readout, and lists the
+    narrowest granular scope per action type. A hard content-boundary
+    allowlist means it never touches profiles, schema, identity, streams,
+    jobs, auth, or any non-content setting.
+  - Context-layer creation, custom streams and schema mapping are out of
+    scope (`setup_recommendation` only).
+  - Non-destructive by rule: `execute` never sends a `DELETE` request and
+    is additive only (create, add, publish). Every removal, deletion,
+    unpublish or shrink becomes a `human_handoff` for a person to carry out,
+    with before-state, dependencies and steps. A superset check on every
+    `PUT` refuses writes that would remove existing values.
+  - Only changes what it created: a ledger tracks objects the skill made.
+    Existing audiences, Affinities and rules are read-only to the agent,
+    even for additive edits (a recency guard shrinks a live audience).
+    Changes to them are human handoffs, sized by copying the audience's
+    FilterQL into a read-only size check.
+  - Plans and scorecards explain every section and table in plain
+    language. Actions are grouped into batches (about 15 to 25 for a
+    small site). Owners are roles, never personal names, and website
+    requests use a generic User-Agent.
+  - Channel-aware audience guidance: recency guards fit the channel
+    (site activity for ads and on-site, engagement or consent for email),
+    "last activity" fields fed by sync streams are flagged, and tiers
+    switch from score to engagement when relative scores don't separate
+    people.
+  - Topic labels that are people's names are redacted in prose and only
+    appear in block payloads; tag detection no longer false-matches
+    "Analytics"; documented response shapes for settings and sizes.
+  - Corrected scoring model: topics at relevance 0 are dropped (verified
+    in `content/topics/bayes.go` and live), so the skill now looks for core
+    topics lost at relevance 0 on high-traffic pages, instead of treating
+    relevance-0 labels as profile noise. Adds traffic-weighted coverage,
+    stale-status and redirect checks, interim URL-based audiences when
+    scores aren't usable, and a `person_name` flag on plan items.
+  - Cross-platform and tool-agnostic: calls are written as request specs
+    for any HTTP/MCP tool, with no bash/jq/awk dependency, and generated
+    scripts are single-file Python 3 standard library, so they run on
+    macOS, Windows and Linux.
 - **Router entry** in `lytics-agent/SKILL.md` for content and topic intents.
 
 ## [0.2.0] - 2026-04-27
