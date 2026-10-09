@@ -57,6 +57,12 @@ See [`references/auth.md`](references/auth.md) for the full authentication contr
 | `schema-optimizer` | Analyze schema usage and suggest improvements |
 | `stream-inspector` | Inspect data streams, view stats, and browse recent events |
 
+### Content & Personalization
+
+| Skill | Description |
+|-------|-------------|
+| `content-affinity-advisor` | Assess context layers and topics, build an advisement plan (taxonomy, Affinities, micro-audiences), and execute approved curation actions |
+
 ### Campaigns & Flows
 
 | Skill | Description |

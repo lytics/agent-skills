@@ -4,6 +4,27 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`content-affinity-advisor` skill** -- assess, advise on, and curate Lytics
+  content affinity: context layers, topics, Affinities (supertopics), and
+  topic-based micro-audiences. Three modes, each in its own reference file:
+  `assess` (read-only scorecard and evidence: source hygiene, classification
+  coverage and fit, language, taxonomy size and long tail, brand/generic and
+  duplicate noise, profile signal, Affinity design, downstream use), `advise`
+  (target taxonomy plus an ordered, machine-readable action plan a person or
+  agent can carry out), and `execute` (playbooks for each action type behind
+  the confirmation gate, with before/after snapshots and a dry-run script
+  mode). `api-notes.md` records drift from the public docs found in `lio`:
+  the live Affinity API is `/api/content/affinity` (the documented
+  `/api/content/topicrollup` and `/api/content/topicblocklist` routes are
+  gone), topic settings must be written to the legacy `topic_blacklist` /
+  `topic_whitelist` keys, custom topic rules need an explicit relevance
+  `value`, and scores are normalized per user with no decay.
+- **Router entry** in `lytics-agent/SKILL.md` for content and topic intents.
+
 ## [0.2.0] - 2026-04-27
 
 ### Added
