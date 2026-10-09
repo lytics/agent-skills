@@ -11,7 +11,7 @@ metadata:
 Full segment lifecycle management -- list, get, create, update, delete, validate FilterQL, and estimate segment size.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -180,5 +180,5 @@ Before creating/updating a segment:
 - **Very large segment**: Note the size and ask user to confirm intent
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`
-- References: `../references/filterql-grammar.md`
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md`
+- References: `references/filterql-grammar.md`

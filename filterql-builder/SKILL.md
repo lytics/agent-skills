@@ -23,7 +23,7 @@ Translate structured conditions into valid FilterQL syntax. Takes field/operator
 
 ### Step 1: Map Each Condition to FilterQL Syntax
 
-For each condition, use the type-operator compatibility matrix from `../references/field-types.md`:
+For each condition, use the type-operator compatibility matrix from `references/field-types.md`:
 
 | Field Type | Natural Language | FilterQL |
 |-----------|-----------------|----------|
@@ -99,4 +99,4 @@ Common conversions:
 - If the FilterQL is syntactically invalid, identify and fix the issue
 
 ## Dependencies
-- References: `../references/filterql-grammar.md`, `../references/field-types.md`
+- References: `references/filterql-grammar.md`, `references/field-types.md`

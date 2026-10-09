@@ -17,7 +17,7 @@ Two webhook workflows are supported:
 - **`webhook_enrichment`** (`--workflow=enrichment`): request/response; sends a profile and lands the response into a stream.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Invocation
 
@@ -32,7 +32,7 @@ build <destination-name | docs-URL> [--workflow=trigger|enrichment]
 draft <destination-name | docs-URL>               # alias for build that stops before save
 ```
 
-Reads (`list`, `get`) execute immediately. Writes (`create`, `update`, `delete`) and the final save in `build` use the confirmation-gate pattern (`../references/confirmation-gate.md`).
+Reads (`list`, `get`) execute immediately. Writes (`create`, `update`, `delete`) and the final save in `build` use the confirmation-gate pattern (`references/confirmation-gate.md`).
 
 ## Default Template Language
 
@@ -158,7 +158,7 @@ Capture the returned `template_id`. Then test (see Test Workflow below). On feed
 Mention to the user that `_draft_*` templates may show up in their Lytics UI list; they will be renamed in Step 7.
 
 ### Step 7: Save (Rename)
-Once tests pass, prompt for the final name + description, then run `update` to rename the draft. Show the full payload through the confirmation gate (`../references/confirmation-gate.md`) before writing.
+Once tests pass, prompt for the final name + description, then run `update` to rename the draft. Show the full payload through the confirmation gate (`references/confirmation-gate.md`) before writing.
 
 ### Step 8: Emit Job Blueprint and Hand Off
 Print the full webhook job config payload (see Webhook-Job Hand-Off Blueprint below) with:
@@ -398,5 +398,5 @@ No confirmation needed for a test against an already-saved template -- it's read
 
 ## Dependencies
 - Composes: `entity-lookup skill`, `schema-discovery skill`, `connection-manager skill`, `job-manager skill`
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md`, `references/api-response-format.md`
 - Related: `integration-setup skill` (orchestrator hand-off pattern), `integration-advisor skill` (research-driven advisor pattern)

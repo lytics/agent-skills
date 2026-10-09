@@ -11,7 +11,7 @@ metadata:
 Interactive profile exploration that combines identity lookup, segment membership analysis, and event history browsing. Provides a comprehensive view of an individual user profile.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Inputs
 - Identity field and value (e.g., `email`, `user@example.com`)
@@ -85,4 +85,4 @@ If the user doesn't have a specific identity:
 
 ## Dependencies
 - Composes: `entity-lookup skill`, `segment-manager skill`, `stream-inspector skill`
-- References: `../references/auth.md`
+- References: `references/auth.md`

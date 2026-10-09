@@ -11,7 +11,7 @@ metadata:
 Inspect data streams flowing into Lytics -- list available streams, view their statistics, and browse recent events. Useful for debugging data collection, verifying integrations, and understanding incoming data shape.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -82,4 +82,4 @@ Show the most recent events with:
 - **No events**: Check if the integration is active, suggest checking job status
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`
+- Uses: `references/auth.md`, `references/api-client.md`

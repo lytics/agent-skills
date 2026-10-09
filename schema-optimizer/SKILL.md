@@ -11,7 +11,7 @@ metadata:
 Analyzes the schema for quality issues and suggests improvements. Identifies unused fields, misconfigured merge operations, missing mappings, identity resolution gaps, and PII exposure risks. Read-only analysis with actionable recommendations.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Inputs
 - Table (default: `user`)
@@ -224,4 +224,4 @@ For set and map fields, check if capacity is set and whether it's appropriate re
 
 ## Dependencies
 - Composes: `schema-manager skill`, `segment-manager skill`
-- References: `../references/field-types.md`, `../references/auth.md`, `../references/api-client.md`
+- References: `references/field-types.md`, `references/auth.md`, `references/api-client.md`

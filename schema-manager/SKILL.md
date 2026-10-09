@@ -11,7 +11,7 @@ metadata:
 Browse and modify the profile schema -- fields, mappings, identity configuration, and field rankings. Use this when users want to understand their data model, add new fields, or modify field mappings.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -284,7 +284,7 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/lql" \
 
 ## Field Types
 
-See `../references/field-types.md` for the complete type reference including:
+See `references/field-types.md` for the complete type reference including:
 - Scalar: `string`, `bool`, `int`, `number`, `date`
 - Complex: `[]string`, `map[string]int`, `map[string]string`, etc.
 - Special: `geolocation`, `embedding`, `membership`
@@ -354,9 +354,9 @@ Every write operation MUST follow this sequence:
 
 ## Error Handling
 - **Field already exists**: there is no 409 -- field POST is an upsert and silently replaces the existing field. GET `/v2/schema/{table}/field/{id}` before creating, and if it exists, confirm the user means to replace it
-- **Invalid type**: List valid types from `../references/field-types.md`
+- **Invalid type**: List valid types from `references/field-types.md`
 - **Publish failures**: Show error details, suggest checking field validity
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`
-- References: `../references/field-types.md`
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md`
+- References: `references/field-types.md`

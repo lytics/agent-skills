@@ -11,7 +11,7 @@ metadata:
 Copy metadata between two Lytics accounts safely. Supports segments, schema fields and mappings, flows, jobs, connections, and auth providers. Handles the hard parts that break naive copy: internal-ID remapping, dependency traversal, upsert-by-natural-key, schema-patches workflow, and OAuth pauses.
 
 ## Environment
-Unlike other skills, `account-sync` operates against **two** accounts per invocation. See the **Multi-Account** section of `../references/auth.md` for credential resolution (profile config, fallback prompts, per-call env overrides).
+Unlike other skills, `account-sync` operates against **two** accounts per invocation. See the **Multi-Account** section of `references/auth.md` for credential resolution (profile config, fallback prompts, per-call env overrides).
 
 ## Invocation
 
@@ -88,8 +88,8 @@ Resume is the supported answer to "the run halted midway; what do I do?" Users s
 ### Step 1: Resolve Profiles
 1. Read `~/.lytics/accounts.toml`. If missing, proceed with prompt-only fallback.
 2. Resolve `<src-profile>` and `<dst-profile>` to `{token, url}` pairs. Prompt per missing entry.
-3. Make every call through the `src` / `dst` helpers from `../references/auth.md`, never through `LYTICS_API_URL` / `LYTICS_API_TOKEN` -- an env-prefixed call silently hits the ambient account, so a "sandbox to prod" run can overwrite the sandbox source. This applies to every snippet borrowed from a peer skill.
-4. Resolve each profile's own aid with the **Same-account guard** in `../references/auth.md`. Fail fast on 401 with a clear message naming which profile's token was rejected. Halt if either aid fails to resolve or the two match. Print both aids in the plan header (Step 5).
+3. Make every call through the `src` / `dst` helpers from `references/auth.md`, never through `LYTICS_API_URL` / `LYTICS_API_TOKEN` -- an env-prefixed call silently hits the ambient account, so a "sandbox to prod" run can overwrite the sandbox source. This applies to every snippet borrowed from a peer skill.
+4. Resolve each profile's own aid with the **Same-account guard** in `references/auth.md`. Fail fast on 401 with a clear message naming which profile's token was rejected. Halt if either aid fails to resolve or the two match. Print both aids in the plan header (Step 5).
 
 ### Step 2: Select Source Objects
 Translate the selector into a concrete list of source objects:
@@ -126,7 +126,7 @@ Every reference below must be **walked** (traversed as a dep edge). Whether it a
 
 | Object | Reference | How to extract | Walk? | Remap? |
 |--------|-----------|----------------|-------|--------|
-| Segment | `INCLUDE <slug>` inside `segment_ql` | Regex over the FilterQL text; see `../references/filterql-grammar.md` | Yes -- verify slug exists in dst | No (slugs are account-stable) |
+| Segment | `INCLUDE <slug>` inside `segment_ql` | Regex over the FilterQL text; see `references/filterql-grammar.md` | Yes -- verify slug exists in dst | No (slugs are account-stable) |
 | Segment | `INCLUDE \`<32-char hex>\`` inside `segment_ql` | Regex over the FilterQL text | Yes -- resolve src hex to source slug, verify slug in dst | Yes -- rewrite to dst's own hex for that slug |
 | Segment | Schema fields referenced in FilterQL identifiers | Parse FilterQL identifiers against `GET /v2/schema/{table}/field` | Yes -- verify each referenced field exists in dst | No |
 | Segment | Prediction refs (e.g., `segment_prediction.\`Premier Likelihood\``) | Parse FilterQL; identifiers namespaced to `segment_prediction.*` indicate model deps | Yes -- verify model/prediction exists in dst via its registry endpoint; if missing, block | No |
@@ -214,7 +214,7 @@ Always include the operations list. Include "Blockers" when any exist (missing a
 Under `--dry-run`, stop after rendering the plan -- do not prompt for confirmation and do not execute.
 
 ### Step 6: Confirmation Gate
-Follows `../references/confirmation-gate.md`:
+Follows `references/confirmation-gate.md`:
 - NEVER execute without explicit `yes`.
 - If user requests changes, revise and re-render Step 5.
 - Bulk selections (all-of-type, prefix) require a second confirmation echoing the object count + a sample of 5 names.
@@ -653,7 +653,7 @@ Verification never changes execution flow on its own (the write already succeede
 Applied in this order of defense:
 
 1. **`--dry-run` / `compare`** -- no writes. The plan is the only output.
-2. **Plan preview + confirmation gate** -- mandatory on any non-dry-run invocation. Follows `../references/confirmation-gate.md`.
+2. **Plan preview + confirmation gate** -- mandatory on any non-dry-run invocation. Follows `references/confirmation-gate.md`.
 3. **Bulk-operation gate** -- `all` and `--prefix` selectors (and `compare` across all types) require a second confirmation showing the object count and a sample of up to 5 names. If count > 50, require the user to retype `confirm <count>` to proceed.
 4. **Retype gate for `idconfig`** -- in addition to the standard confirmation, every `idconfig` write requires the user to retype `confirm idconfig <table>` verbatim. See Account Settings > `idconfig` requires an extra confirmation gate.
 5. **Stop-on-first-error** -- no silent continuation past failures. Partial successes remain in the destination; the manifest records `success`, the failed op, and every untouched `pending` op so the user can resume via `resume <manifest>` or `sync ... --resume <manifest>`.
@@ -692,7 +692,7 @@ If you are implementing a change to the skill and it breaks idempotency, that's 
 - **400 on `PUT /api/account/setting/{slug}`** -- value type mismatch against `field.type`. Surface the server's message; usually the fix is client-side type coercion (e.g., boolean `true` vs string `"true"`).
 - **409 on destination create** -- a natural-key race happened (something was created between the dest-lookup and the write). Re-classify as `update` and re-prompt with an amended plan.
 - **422 on validation** (segment FilterQL, schema patch apply) -- surface the full message and halt. Usually indicates a missing upstream dep that should have been caught in Step 3.
-- **Rate limit (429)** -- respect `../references/api-client.md`'s guidance. Back off briefly and retry once. Do not silently drop an op.
+- **Rate limit (429)** -- respect `references/api-client.md`'s guidance. Back off briefly and retry once. Do not silently drop an op.
 - **Network / transient errors** -- retry once; on second failure, treat as a hard failure and halt.
 
 ### In-Flight Schema Patch Cleanup
@@ -720,8 +720,8 @@ Required cleanup on halt (must execute before the run exits, regardless of exit 
 - Stream names are case-sensitive and must match exactly.
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`, `../references/api-response-format.md`
-- References: `../references/filterql-grammar.md` (for `INCLUDE slug` parsing)
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md`, `references/api-response-format.md`
+- References: `references/filterql-grammar.md` (for `INCLUDE slug` parsing)
 - Composes knowledge from: `segment-manager skill`, `schema-manager skill`, `flow-manager skill`, `job-manager skill`, `connection-manager skill`
 
 ## Known Risks

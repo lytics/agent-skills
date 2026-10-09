@@ -11,7 +11,7 @@ metadata:
 Look up individual user profiles by identity field. Returns the full profile including all fields, segment memberships, and metadata.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -89,4 +89,4 @@ Use the confirmation-gate pattern. Warn that **both** kinds are irreversible thr
 - **Multiple matches**: If multiple profiles match, present all and ask user to select
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md` (for deletes only)
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md` (for deletes only)

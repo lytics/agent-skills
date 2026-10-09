@@ -11,7 +11,7 @@ metadata:
 Fetch and interpret the profile schema to find fields that match natural language descriptions. Used by other skills (especially audience-builder) to map user intent to actual schema fields.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Inputs
 - Natural language description of the data concepts to find (e.g., "country", "purchase history", "email engagement")
@@ -67,7 +67,7 @@ Call the field names endpoint to get the complete list of available fields.
 ### Step 2: Score Candidate Fields
 For each concept in the user's description, score candidate fields by:
 1. **Name match** (highest priority): exact or substring match on field name
-2. **Type compatibility**: field type supports the intended operation (see `../references/field-types.md`)
+2. **Type compatibility**: field type supports the intended operation (see `references/field-types.md`)
 3. **Description match**: field's `ShortDesc` or `LongDesc` matches
 
 ### Step 3: Confirm with Value Distributions
@@ -97,4 +97,4 @@ Common natural language to field name patterns:
 - If the table doesn't exist, report and suggest `user` as default
 
 ## Dependencies
-- References: `../references/auth.md`, `../references/api-client.md`, `../references/field-types.md`
+- References: `references/auth.md`, `references/api-client.md`, `references/field-types.md`

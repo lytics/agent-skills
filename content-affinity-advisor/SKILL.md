@@ -62,7 +62,7 @@ Load only the files the current mode needs.
 **Never touched, under any mode:** profiles, schema fields and mappings, identity config, streams, jobs, connections or auth, and any account setting outside the content allowlist in `execution.md`. `execute` refuses any request outside the content, topic and Supertopic boundary, even if the token would allow it.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 - **`assess` and `advise` run on a read-only view token.** Several content endpoints return 403 to granular view tokens. That is expected: `api-notes.md` gives a read-only fallback for each. Record any 403 in the assessment's `gaps` list and continue. Do not stop the run, and do not retry with other auth styles.
 - **`execute` needs a write token, and it is additive only** (create, add or publish; never `DELETE`). Before any write, it prints the exact token scopes required for the approved actions, and the risk of each (see `execution.md`). It never asks for or uses a broader token than those actions need.
@@ -79,7 +79,7 @@ This skill must work on macOS, Windows and Linux, and in any agent that can call
 
   The `curl` snippets are illustrations only. Never require bash, `jq`, `awk` or `sed`.
 - **Auth header:** `Authorization: <token>`, the raw token with no `Bearer`. Read the token and URL from the environment the runtime provides:
-  - `LYTICS_API_TOKEN`, `LYTICS_API_URL` (see `../references/auth.md`)
+  - `LYTICS_API_TOKEN`, `LYTICS_API_URL` (see `references/auth.md`)
   - on Windows PowerShell, these are `$env:LYTICS_API_TOKEN` / `$env:LYTICS_API_URL`
 
   Never print the token.
@@ -125,7 +125,7 @@ Follow `advisement.md`. Produce:
 ### 4. Execute (optional)
 Follow `execution.md`.
 - Only `approved` actions run. Each one is checked against the scope boundary.
-- The skill prints the required token scopes and risks before anything else, then runs every write through `../references/confirmation-gate.md`.
+- The skill prints the required token scopes and risks before anything else, then runs every write through `references/confirmation-gate.md`.
 - `--dry-run` writes a reviewable script instead of calling the API.
 
 ### 5. Hand off
@@ -148,5 +148,5 @@ Follow `execution.md`.
 - **Shell differences:** don't depend on a particular shell. If you do run a shell, avoid shell-specific traps (for example, a variable named `path` overwrites `PATH` in zsh). Generated scripts are Python, not shell.
 
 ## Dependencies
-- `../references/auth.md`, `../references/api-client.md`, `../references/api-response-format.md`, `../references/confirmation-gate.md`, `../references/filterql-grammar.md`
+- `references/auth.md`, `references/api-client.md`, `references/api-response-format.md`, `references/confirmation-gate.md`, `references/filterql-grammar.md`
 - `segment-manager skill`, `audience-builder skill`, `audience-snapshot skill`, `profile-investigator skill`, `schema-discovery skill`, `integration-advisor skill`, `campaign-flow-builder skill`

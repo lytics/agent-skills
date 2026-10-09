@@ -1,6 +1,6 @@
 # API notes: content, topics, Supertopics
 
-Verified against the `lio` source (develop, October 2026) and five blind read-only test runs on a live account. The public docs at docs.lytics.com lag the code in several places; those are called out below. Base URL is `${LYTICS_API_URL:-https://api.lytics.io}`. Auth is per `../references/auth.md`. URL-encode FilterQL in query strings, with the HTTP tool's encoding or Python's `urllib.parse.quote(ql, safe="")`. Requests are written as `METHOD /path?query`; any HTTP client works (see "Portability" in `SKILL.md`).
+Verified against the `lio` source (develop, October 2026) and five blind read-only test runs on a live account. The public docs at docs.lytics.com lag the code in several places; those are called out below. Base URL is `${LYTICS_API_URL:-https://api.lytics.io}`. Auth is per `references/auth.md`. URL-encode FilterQL in query strings, with the HTTP tool's encoding or Python's `urllib.parse.quote(ql, safe="")`. Requests are written as `METHOD /path?query`; any HTTP client works (see "Portability" in `SKILL.md`).
 
 ## Terms
 | UI / docs name | API object | Where it lives |

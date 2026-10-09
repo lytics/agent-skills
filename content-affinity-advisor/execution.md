@@ -116,7 +116,7 @@ Check every request against this list. **Refuse anything else.**
 1. **Pre-check.** Re-read the current state. If the action is already done, mark it `done`. If anything conflicts with the plan, stop and ask.
 2. **Dependency check.** Before any block, search user segments and flows for references (FilterQL containing the topic label). If anything pre-existing depends on it, the action becomes a `human_handoff`.
 3. **Snapshot** to `before/<action id>.json`.
-4. **Confirm** via `../references/confirmation-gate.md`.
+4. **Confirm** via `references/confirmation-gate.md`.
    - A batch may be confirmed once, showing every item.
    - High-risk actions are confirmed alone.
 5. **Execute** item by item. Re-read each setting right before its own write (no cached values). Save each response to `after/<action id>/<item>.json`, and update the ledger.

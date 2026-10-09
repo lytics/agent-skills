@@ -16,7 +16,7 @@ Supports:
 - **Enrichment**: "Enrich profiles with Clearbit data"
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Integration Architecture
 
@@ -234,6 +234,6 @@ Common Lytics-to-platform field mappings:
 - **Job creation fails**: Parse error, check required config fields
 
 ## Dependencies
-- Composes: `connection-manager skill`, `job-manager skill`, `schema-discovery skill`, `../references/confirmation-gate.md`
-- References: `../references/auth.md`
+- Composes: `connection-manager skill`, `job-manager skill`, `schema-discovery skill`, `references/confirmation-gate.md`
+- References: `references/auth.md`
 - Related: `audience-advisor skill`, `audience-builder skill` (for creating segments to export)

@@ -11,7 +11,7 @@ metadata:
 Top-level intent classifier and dispatcher for Lytics CDP operations. Analyzes the user's request and routes to the appropriate specialized skill.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution and pre-flight checks.
+Requires authenticated API access. See `references/auth.md` for credential resolution and pre-flight checks.
 
 ## Intent Classification
 
@@ -133,8 +133,8 @@ Ask: "Would you like to see your schema fields, recent streaming events, or look
 ## Shared Conventions
 
 All skills follow these conventions:
-- **Auth**: See `../references/auth.md` for credential resolution
-- **Base URL**: See `../references/api-client.md` for URL construction
+- **Auth**: See `references/auth.md` for credential resolution
+- **Base URL**: See `references/api-client.md` for URL construction
 - **Reads**: Execute immediately, display results
 - **Writes**: Always use confirmation-gate pattern (summary + payload + approval)
 - **Errors**: Parse API errors, suggest fixes, never silently fail

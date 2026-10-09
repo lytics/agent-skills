@@ -4,6 +4,21 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-10-09
+
+### Fixed
+
+- **Shared references were never installed** ([#1](https://github.com/lytics/agent-skills/issues/1)).
+  `npx skills add` copies only each skill's own folder, so every
+  `../references/*.md` link (auth rules, confirmation gate, FilterQL grammar,
+  field types) pointed at nothing once installed. Each skill now ships the
+  references it uses in its own `references/` folder, generated from the
+  top-level `references/` by `scripts/sync-references.sh`; CI fails a PR whose
+  copies are stale.
+- **README install instructions**: a non-interactive install for one agent,
+  how to pick several skills or agents (repeat the flag; comma lists are
+  rejected), and what the "always included" agents list means.
+
 ## [0.3.1] - 2026-10-09
 
 ### Fixed

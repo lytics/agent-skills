@@ -1,0 +1,28 @@
+name: Check skill references
+
+# Each skill ships its own copy of the shared references/ files (installers copy only the skill folder).
+# Fail when a copy is stale or a skill still links ../references/.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate per-skill references
+        run: scripts/sync-references.sh
+
+      - name: Fail if anything changed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            echo "::error::Per-skill references are out of date. Run scripts/sync-references.sh and commit the result."
+            exit 1
+          fi

@@ -11,7 +11,7 @@ metadata:
 The primary end-to-end skill. Takes a natural language audience description and produces a validated, sized, and confirmed segment. Composes schema-discovery, filterql-builder, segment-manager, and confirmation-gate.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## Inputs
 - Natural language description of the desired audience
@@ -62,7 +62,7 @@ Confirm field values match (e.g., `country` contains "US", `products_purchased` 
 ### Step 3: Build FilterQL
 Use `filterql-builder skill` to construct the filter expression.
 
-Map each concept to a FilterQL condition based on field type (see `../references/field-types.md`):
+Map each concept to a FilterQL condition based on field type (see `references/field-types.md`):
 - String equality: `country = "US"`
 - Set non-membership: `NOT products_purchased INTERSECTS ("socks")`
 - Date comparison: `last_sock_purchase < "now-1y"`
@@ -177,5 +177,5 @@ If the user wants to update an existing segment:
 - **Very large segment (>90% of total)**: Note this and confirm intent
 
 ## Dependencies
-- Composes: `schema-discovery skill`, `filterql-builder skill`, `segment-manager skill`, `../references/confirmation-gate.md`
-- References: `../references/auth.md`, `../references/filterql-grammar.md`, `../references/field-types.md`
+- Composes: `schema-discovery skill`, `filterql-builder skill`, `segment-manager skill`, `references/confirmation-gate.md`
+- References: `references/auth.md`, `references/filterql-grammar.md`, `references/field-types.md`

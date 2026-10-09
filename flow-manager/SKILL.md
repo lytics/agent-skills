@@ -11,7 +11,7 @@ metadata:
 Manage flows (customer journeys/campaigns) -- create, update, delete flows and manage their steps including delays, exports, conditionals, A/B tests, and affinity routing.
 
 ## Environment
-Requires authenticated API access. See `../references/auth.md` for credential resolution.
+Requires authenticated API access. See `references/auth.md` for credential resolution.
 
 ## API Endpoints
 
@@ -145,5 +145,5 @@ Use the confirmation-gate pattern. For state changes (draft -> running, running 
 - **State transition errors**: Only valid transitions are draft->running, running->draining
 
 ## Dependencies
-- Uses: `../references/auth.md`, `../references/api-client.md`, `../references/confirmation-gate.md`
+- Uses: `references/auth.md`, `references/api-client.md`, `references/confirmation-gate.md`
 - Related: `segment-manager skill` (for entry segments), `job-manager skill` (for work steps)

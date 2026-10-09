@@ -4,9 +4,21 @@ Agent skills for interacting with the [Lytics](https://www.lytics.com) Customer 
 
 ## Installation
 
+Install every skill for one agent, non-interactively:
+
 ```bash
-npx skills add lytics/agent-skills
+npx skills add lytics/agent-skills --skill '*' --agent claude-code -y
 ```
+
+- Repeat `--agent` for more than one agent (`--agent claude-code --agent cursor`); a comma-separated list is rejected. Without `--agent`, the CLI asks which agents to install into, and the "Universal (.agents/skills) -- always included" group it shows is a list of *agents*, not extra skills.
+- `--skill` takes skill names (`--skill audience-builder --skill segment-manager`) or `'*'`.
+- Plain `npx skills add lytics/agent-skills` walks through both choices interactively.
+
+Each skill is self-contained: the shared files it relies on (auth, confirmation gate, FilterQL grammar, ...) ship inside its own `references/` folder.
+
+### Contributing
+
+The top-level [`references/`](references/) folder is the only copy to edit. After changing it, or adding a `../references/<file>.md` link in a skill, run `scripts/sync-references.sh` to refresh each skill's copy. CI fails a PR whose copies are out of date.
 
 ## Environment Setup
 
