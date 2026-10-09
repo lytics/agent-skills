@@ -50,7 +50,7 @@ Add topics when the classifier misses the page's real subject. In order of prefe
 1. **Customer-controlled markup.** `<meta name="lytics:topics" content="Mortgages, First-time Buyers">` on page templates, or `keywords`, or a CMS field read through `content_customprops`. This is the best long-term fix, because it survives re-classification. Only recommend it if the customer can change their site.
 2. **Rule-based custom topics.** These live inside Lytics (`/v2/content/customtopic`) and apply topics to every page matching a FilterQL condition or URL pattern. They're the main lever when the customer can't touch their site.
 3. **Page-level topic edits.** These are for a small number of high-value pages (`/api/content/doc/.../topic/...`). They don't scale, so use them for landing pages and key product pages.
-4. **Allowlist.** Forces an important topic into the scored set even when it's rare. Publishing an Supertopic does this for its own topics. Any other allowlist change is a human handoff, because it can push other topics out of the 500-topic set.
+4. **Allowlist.** Forces an important topic into the scored set even when it's rare. Publishing a Supertopic does this for its own topics. Any other allowlist change is a human handoff, because it can push other topics out of the 500-topic set.
 
 ## Judge "too general" and "too specific" on profiles, not just pages
 A topic map can look fine at page level and still produce useless profiles:

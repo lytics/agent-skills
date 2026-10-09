@@ -47,7 +47,7 @@ Load only the files the current mode needs.
 `assess` may *recommend* this kind of setup when the evidence calls for it (for example, a retail site whose URLs can't carry a taxonomy). It is written as a `setup_recommendation` action for a person or a dedicated setup skill. `execute` never creates layers, streams or schema.
 
 **Non-destructive, always.** This skill never makes a `DELETE` API call, under any mode, token or instruction. It only adds or creates; it never removes. Anything destructive is written up as a **`human_handoff`** action, with exact steps for a person to carry out themselves. That covers:
-- deleting or retiring an Supertopic
+- deleting or retiring a Supertopic
 - deleting or changing a custom topic rule
 - zeroing or removing a topic on a page
 - removing entries from a block or allow list

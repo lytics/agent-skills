@@ -79,7 +79,7 @@ Use `GET /api/segment/size?segments=<FilterQL>` for counts, and saved-segment `f
 | **Inferred topics** | Profiles with `lytics_content_inferred`, compared with the layer's `inferred_affinities` flag; plus `fieldinfo` on that field | Check the top inferred topics make sense. In testing, the field was populated on millions of profiles while the config said `inferred_affinities: false`, which is not yet explained. Report what you see; don't assume the flag tells the whole story. |
 | **Opportunity (derived)** | Topics with high profile counts but few live (`httpstatus` 200) pages | Content gaps worth telling the customer about. |
 
-Scores are normalized to each person's top topic, and an Supertopic's score averages only the member topics the person has. So **a high threshold alone does not mean high engagement.**
+Scores are normalized to each person's top topic, and a Supertopic's score averages only the member topics the person has. So **a high threshold alone does not mean high engagement.**
 
 ## E. Site (optional)
 Run `site-assessment.md` if a site URL is known and fetching it is allowed. Add its findings, including the URL-structure verdict, to the scorecard.

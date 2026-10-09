@@ -26,7 +26,7 @@ The agent may modify (`PUT`) **only objects it created itself in this plan's run
 
 ### Rule 3: Never shrink or remove anything live
 Anything that removes, deletes, zeroes, unpublishes, narrows or shrinks existing configuration or a live audience is **destructive**, and becomes a `human_handoff`. That includes:
-- deleting, retiring or unpublishing an Supertopic; removing topics or lowering weights
+- deleting, retiring or unpublishing a Supertopic; removing topics or lowering weights
 - **changing a live audience the skill didn't create**, including adding a recency guard or a threshold (it shrinks the audience)
 - deleting or "changing" a custom topic rule (which needs delete and recreate)
 - zeroing or removing a topic on a page

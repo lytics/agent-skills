@@ -4,7 +4,7 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-10-09
 
 ### Added
 
