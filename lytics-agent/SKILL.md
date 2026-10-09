@@ -84,6 +84,10 @@ Route based on keywords and intent:
 **Triggers**: "connection", "auth", "credentials", "provider"
 **Route to**: `connection-manager skill`
 
+### Content Affinity / Topics
+**Triggers**: "topics", "content affinity", "topic curation", "clean up topics", "topic taxonomy", "affinities", "supertopics", "topic rollup", "context layer", "interest engine", "content collection", "interest-based audience", "audience by interest", "lytics_content", "lytics_rollup", "why are my topics random"
+**Route to**: `content-affinity-advisor skill`
+
 ### Webhook Templates
 **Triggers**: "webhook template", "send to a webhook", "custom webhook destination", "Qualtrics webhook", "Slack webhook", "transform profile to webhook payload", "build a webhook payload", "webhook integration for", "send profiles to a custom URL"
 **Route to**: `webhook-template-builder skill`
