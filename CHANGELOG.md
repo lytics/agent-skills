@@ -4,12 +4,12 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.1] - 2026-10-09
 
 ### Fixed
 
 Instructions that made a write do something other than what the user approved,
-each checked against lio `develop` source:
+each checked against lio `develop` source and exercised against a running lio:
 
 - **Multi-account calls hit the ambient account.** The `references/auth.md`
   env-prefix pattern expanded `${LYTICS_API_URL}` before the prefix applied, so
@@ -55,7 +55,7 @@ each checked against lio `develop` source:
   account.
 - **Router entry** in `lytics-agent/SKILL.md` for content and topic intents.
 
-## [0.2.0] - 2026-04-27
+## [0.2.0] - 2026-05-01
 
 ### Added
 
@@ -82,6 +82,13 @@ each checked against lio `develop` source:
   automatically remapped via the in-run template map; jobs synced without
   their template halt with a blocker rather than writing a broken reference.
 - **Router entry** in `lytics-agent/SKILL.md` for webhook-template intents.
+
+### Changed
+
+- **Auth centralized in `references/auth.md`** -- one contract for CLI, SaaS,
+  multi-agent, and multi-account (`~/.lytics/accounts.toml`) credential
+  resolution; the per-skill auth blocks now point at it.
+- **MIT license** added; README links to the access-token docs.
 
 ## [0.1.0] - 2026-04-20
 
