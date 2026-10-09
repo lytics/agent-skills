@@ -146,11 +146,11 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/segment" \
   -d '{ ... approved payload ... }'
 ```
 
-Report the result:
+Report the result using `.data.id` and `.data.slug_name` **from the response**, not the slug you sent: if the slug was taken, lio silently renames it to `<slug>_1` and the create still succeeds, and the slug you sent belongs to someone else's segment.
 ```
-Successfully created segment "US Non-Sock Buyers" (id: abc123)
-View at: ${LYTICS_API_URL}/segment/us_no_socks
+Successfully created segment "US Non-Sock Buyers" (id: abc123, slug: us_no_socks)
 ```
+If the returned slug differs from the requested one, say so explicitly.
 
 After successful creation, offer an audience snapshot:
 "Segment created successfully. Would you like to see an audience snapshot showing the demographic breakdown and field distributions?"
@@ -168,7 +168,7 @@ When field mapping is ambiguous (multiple equally strong candidates):
 If the user wants to update an existing segment:
 1. Fetch the current segment: `GET /v2/segment/${ID}?inline=true`
 2. Show current FilterQL and proposed changes
-3. Use `PUT /v2/segment/${ID}` instead of POST
+3. Use `PUT /v2/segment/${ID}` instead of POST, following the update rules in the `segment-manager skill`: keep the segment's `FROM <table>` and `ALIAS <slug>` in the new `segment_ql`, and check the response `.data.id` equals `${ID}` -- otherwise a new segment was created
 
 ## Error Handling
 - **No matching fields**: Report clearly, suggest the user describe their data differently

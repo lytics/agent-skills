@@ -37,7 +37,7 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/endpoint" \
 
 ## Response Parsing
 
-All responses use the standard envelope (see `reference/api-response-format.md`):
+All responses use the standard envelope (see `api-response-format.md`):
 ```json
 {"data": ..., "status": N, "message": "..."}
 ```

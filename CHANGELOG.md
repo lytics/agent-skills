@@ -4,6 +4,36 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+Instructions that made a write do something other than what the user approved,
+each checked against lio `develop` source:
+
+- **Multi-account calls hit the ambient account.** The `references/auth.md`
+  env-prefix pattern expanded `${LYTICS_API_URL}` before the prefix applied, so
+  `account-sync` could read from or write to the wrong account. Replaced with
+  `src` / `dst` helpers and a same-account guard on resolved aids.
+- **`account-sync`**: jobs are created with `?run_job=false` (they started
+  immediately); `sync settings` no longer copies security/API settings,
+  `cull_user_filter`, `workflow_exclude_segments`, `enable_schema_patches` or
+  immutable settings; schema-mode probe reads the setting; patches use `tag`.
+- **`schema-manager`**: field bodies use the real lowercase keys (the old keys
+  reset `is_identifier` / `is_pii` on update); publish shows the whole shared
+  draft first; mode probe reads the setting; mapping stream can't change.
+- **`job-manager`**: create starts the job; update is a full replace; kill is a
+  delete. Real status values in `job-manager`, `data-health-monitor`,
+  `export-debugger`; no more "stale `updated` means stuck, bounce it".
+- **Flows**: lower condition priority is checked first; A/B edge probability is
+  ignored by the API, so A/B splits are no longer offered; flow DELETE removes
+  every version permanently.
+- **Segments**: a taken slug is silently renamed on create, so results report
+  the returned slug/id; updates keep `FROM` / `ALIAS` and check the id.
+- **Profiles**: `/api/entity` answers a missing profile with 200 and a
+  placeholder, not 404; soft delete cannot be undone; value-only lookup is `_uid`.
+- Dead cross-references in `references/`.
+
 ## [0.3.0] - 2026-10-09
 
 ### Added

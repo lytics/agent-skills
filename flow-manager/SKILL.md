@@ -50,6 +50,7 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/flow/ui/${FLOW_ID}"
 ```
 
 ### Delete Flow
+**Permanent.** Without a version, this hard-deletes **every version** of the flow -- there is no soft delete and no undo. Say so in the confirmation gate. To remove a single version instead, use `DELETE /v2/flow/ui/${FLOW_ID}/${VERSION}`.
 ```bash
 curl -s -X DELETE "${LYTICS_API_URL:-https://api.lytics.io}/v2/flow/ui/${FLOW_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
@@ -110,7 +111,7 @@ curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/flow/state" \
 | `draft` | Editable, not processing |
 | `running` | Actively processing users |
 | `draining` | Stopping gracefully, processing remaining users |
-| `deleted` | Soft deleted |
+| `deleted` | Marked deleted. Not the result of the DELETE call above, which removes the flow outright |
 
 ## Entry Conditions
 

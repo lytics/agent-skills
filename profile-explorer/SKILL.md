@@ -79,7 +79,7 @@ If the user doesn't have a specific identity:
 3. Help them identify the right profile
 
 ## Error Handling
-- **Profile not found**: Try alternative identity fields, suggest checking spelling
+- **Profile not found**: Try alternative identity fields, suggest checking spelling -- `/api/entity` returns HTTP 200, not 404, for a missing profile: `message: "Not Found"` with a placeholder `{"segments": ["not_found", "all"]}`. Check for that before treating the response as a real profile.
 - **Multiple identities**: Show all linked identities, confirm which profile
 - **Large profile**: Summarize key fields, offer to show full details on request
 

@@ -60,12 +60,12 @@ curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}" \
 
 | Status | Diagnosis |
 |--------|-----------|
-| `runnable` | Job is active -- check logs for export details |
-| `sleeping` | Job is between runs. Check `sleep_until` -- may be in quiet window or scheduled delay |
+| `running` | Job is active -- check logs for export details |
+| `sleeping` | Job is between runs. Check `sleep_until` -- may be in quiet window or scheduled delay. `GET /v2/job/{id}` never includes it; read it from `GET /v2/job?show_state=true` and pick the job by id |
 | `paused` | Job is paused. User or system paused it -- exports are halted |
-| `fault` | Job has errors. Check logs for the error details |
+| `fault-N` (prefix `fault`) | Job has errors (or is backing off after N errors). Check logs for the error details |
 | `failed` | Job has terminally failed. Check logs for root cause |
-| `killed` | Job was manually stopped |
+| `deleted` | Job was killed -- in v2, kill is a delete |
 
 ### Step 4: Check Quiet Window
 
@@ -84,7 +84,7 @@ Quiet window: quiet_time_of_day to (quiet_time_of_day + quiet_period hours)
 Example: 2:00pm - 6:00pm America/Los_Angeles
 ```
 
-If the current time falls within the quiet window, the job is sleeping and won't export until the window ends. Check `sleep_until` in the job response to confirm.
+If the current time falls within the quiet window, the job is sleeping and won't export until the window ends. Confirm with `sleep_until` from `GET /v2/job?show_state=true` (the single-job GET omits it).
 
 If `drop_events_during_quiet_window` is true, events arriving during quiet time are permanently dropped, not queued.
 
@@ -134,7 +134,7 @@ Look for:
    User IS in segment "High Value Customers" (id: seg123)
 
 2. JOB STATUS: PASS
-   Job is "runnable" -- actively processing
+   Job is "running" -- actively processing
 
 3. QUIET WINDOW: FAIL
    Job is currently in quiet window (2:00pm - 6:00pm PT)
@@ -170,7 +170,7 @@ queued, not dropped.
 
 ## Error Handling
 - **Job not found**: List jobs and help user identify the right one
-- **User not found**: Try alternative identity fields
+- **User not found**: Try alternative identity fields -- `/api/entity` returns HTTP 200, not 404, for a missing profile: `message: "Not Found"` with a placeholder `{"segments": ["not_found", "all"]}`. Check for that before treating the response as a real profile.
 - **Multiple export jobs for same platform**: Show all, ask user to pick
 - **No logs available**: Job may be new or logs may have aged out
 

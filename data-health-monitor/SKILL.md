@@ -58,12 +58,13 @@ Evaluate each job:
 
 | Status | Severity | Action |
 |--------|----------|--------|
-| `runnable` | HEALTHY | Running normally |
+| `running`, `initializing` | HEALTHY | Running normally |
 | `sleeping` | HEALTHY | Scheduled, waiting for next run |
-| `paused` | WARNING | Intentional but flag for awareness |
-| `fault` | ERROR | Needs investigation -- fetch logs |
+| `paused`, `pausing` | WARNING | Intentional but flag for awareness |
+| `fault-N` (prefix `fault`) | ERROR | Erroring or backing off after N errors -- fetch logs |
 | `failed` | ERROR | Terminal failure -- fetch logs |
-| `killed` | INFO | Manually stopped |
+| `completed` | INFO | Finished (one-shot jobs) |
+| `deleted`, `deleting` | INFO | Deleted (v2 kill is a delete) |
 
 For faulted/failed jobs, fetch logs:
 ```bash
@@ -71,7 +72,7 @@ curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}/logs" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
 ```
 
-Also check for stale jobs: if a `runnable` job hasn't been `updated` in over 1 hour, it may be stuck.
+Do **not** treat an old `updated` timestamp as a stuck job: `updated` is when the job's *config* was last edited, so every healthy long-running job looks stale by that measure. To judge whether a `running` job is making progress, look at the timestamp of its most recent log event. Never recommend bouncing a job on staleness alone.
 
 ### Check 3: Schema Health
 
@@ -82,9 +83,9 @@ curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/user/field" \
 ```
 
 Check:
-- **Identity fields**: Count fields where `IsIdentifier == true`. Flag if fewer than 2.
-- **PII fields**: Count fields marked `IsPII == true` for awareness.
-- **Stale fields**: Fields with `Modified` timestamp older than 30 days that are actively used.
+- **Identity fields**: Count fields where `is_identifier == true`. Flag if fewer than 2.
+- **PII fields**: Count fields marked `is_pii == true` for awareness.
+- **Stale fields**: Field freshness is per-field `last_seen` on `GET /api/schema/_streams` -- not the schema field's `modified`, which is when its *definition* was last edited. Flag actively used fields whose `last_seen` is older than 30 days.
 
 For deeper coverage analysis:
 ```bash

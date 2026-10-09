@@ -229,7 +229,7 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/api/segment/validate" 
 
 Once the user is satisfied with the proposed audience, hand off to the `audience-builder skill` to create the segment with the full confirmation gate pattern.
 
-For improving existing segments, use `PUT /v2/segment/:id` instead.
+For improving existing segments, use `PUT /v2/segment/:id` instead, following the update rules in the `segment-manager skill` (keep `FROM` and `ALIAS`; confirm the returned id matches).
 
 ### Step 7: Post-Creation Snapshot
 
