@@ -4,10 +4,30 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.2] - 2026-10-09
+## [0.4.0] - 2026-10-09
+
+### Changed (breaking: every skill name)
+
+- **24 skills merged into 10**, each named `lytics-*` with modes in separate
+  files that the agent reads only when needed (see the README table for the
+  old -> new mapping, and its upgrade note: installing does not remove the old
+  names). Overlapping skills competed for the same requests; one skill per
+  area now owns them.
+- **`lytics-agent` (the keyword router) removed.** Agents choose skills from
+  their descriptions; every description now names Lytics and lists the intents
+  it covers.
+- **`lytics-account-sync` only runs when explicitly asked** (stated in its
+  description), since it writes to the destination account.
+- **`references/api.md`** replaces `api-client.md` and
+  `api-response-format.md`, and documents both response shapes as the live
+  API returns them: `/v2` errors in `errors[0].message`, `/api` errors in
+  `message`, and a rejected token in the `/api` shape on both.
 
 ### Fixed
 
+- **Job list flags**: killed jobs appear with `show_all=true`, or with
+  `show_deleted=true` and `show_completed=true` together, not with either flag
+  alone; failed jobs are already in the default list.
 - **Shared references were never installed** ([#1](https://github.com/lytics/agent-skills/issues/1)).
   `npx skills add` copies only each skill's own folder, so every
   `../references/*.md` link (auth rules, confirmation gate, FilterQL grammar,
