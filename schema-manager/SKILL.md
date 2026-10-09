@@ -45,27 +45,26 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/fie
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "Field": "field_name",
-    "Type": "string",
-    "ShortDesc": "Brief description",
-    "MergeOp": "latest",
-    "IsIdentifier": false,
-    "IsPII": false
+    "id": "field_name",
+    "type": "string",
+    "shortdesc": "Brief description",
+    "mergeop": "latest",
+    "is_identifier": false,
+    "is_pii": false
   }'
 
-# Update field -- requires the full field definition, not just changed fields.
-# At minimum, include Field, Type, and the fields you're changing.
+# Update field -- this is a full replace, not a merge. Any key you omit is reset,
+# so `is_identifier` / `is_pii` silently become false if left out.
+# GET the field first, change only what the user asked for, and POST the whole object back.
+# GET reports a server-filled `mergeop` on identifier fields, but POST rejects a merge op on an
+# identifier ("Identifier Field cannot define a Merge Operation.") -- drop it for identifiers.
+curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/field/${FIELD_ID}" \
+  -H "Authorization: ${LYTICS_API_TOKEN}" | jq '.data | if .is_identifier then del(.mergeop) else . end' > field.json
+# ...edit field.json...
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/field/${FIELD_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{
-    "Field": "field_name",
-    "Type": "string",
-    "ShortDesc": "Updated description",
-    "MergeOp": "latest",
-    "IsIdentifier": true,
-    "IsPII": false
-  }'
+  --data-binary @field.json
 
 # Delete field
 curl -s -X DELETE "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/field/${FIELD_ID}" \
@@ -106,13 +105,14 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/map
     "guard_expr": "email != '\'\''"
   }'
 
-# Update mapping
+# Update mapping -- `stream` cannot change on an existing mapping (rejected with 400).
+# To move a mapping to another stream, delete it and create a new one.
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/mapping/${MAPPING_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
     "field": "email",
-    "stream": "new_stream",
+    "stream": "default",
     "expr": "email(raw_email)"
   }'
 
@@ -299,12 +299,12 @@ Execute immediately. Present fields in a readable table format showing:
 
 Some accounts require schema patches (account setting `enable_schema_patches: true`). Others use the direct publish workflow. **You must determine which mode the account uses before making any schema changes.**
 
-Check by attempting to list patches:
+Check the setting itself:
 ```bash
-curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/patch/user" \
-  -H "Authorization: ${LYTICS_API_TOKEN}"
+curl -s "${LYTICS_API_URL:-https://api.lytics.io}/api/account/setting/enable_schema_patches" \
+  -H "Authorization: ${LYTICS_API_TOKEN}" | jq '.data.value'
 ```
-If this returns successfully (even an empty list), the account uses patches. If it returns an error or 404, use the direct publish workflow.
+`true` means patches; `false` or `null` means direct publish. Reading settings needs a token with account-settings read access -- if the read is refused (401/403), ask the user which mode the account uses rather than guessing. Do **not** probe by listing patches: `GET /v2/schema/patch/{table}` returns 200 on every account, so it reports patches even where they are off.
 
 ### Write Workflow A: Schema Patches (when enabled)
 
@@ -334,7 +334,12 @@ When creating a new field, **always prompt for a mapping** -- a field without a 
 
 Every write operation MUST follow this sequence:
 
-1. **Confirm**: Use the confirmation-gate pattern. Show what will change and get user approval.
+1. **Confirm**: Use the confirmation-gate pattern. Show what will change and get user approval. Publish ships the **whole shared draft**, including edits other users have staged and not yet published -- so before confirming, show the full pending diff, not just your own change:
+   ```bash
+   curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/schema/${TABLE}/compare" \
+     -H "Authorization: ${LYTICS_API_TOKEN}"
+   ```
+   If the draft contains changes you did not make, list them and ask whether to publish them too.
 2. **Execute**: Make the field/mapping change via the API.
 3. **Publish**: Immediately publish the changes. A schema write is NOT complete until publish succeeds.
    ```bash
@@ -348,7 +353,7 @@ Every write operation MUST follow this sequence:
 **Never consider a schema write operation complete without publishing.** If multiple changes are being made in sequence, you may batch them and publish once at the end, but always publish before reporting success.
 
 ## Error Handling
-- **Field already exists (409)**: Show existing field details, ask if user wants to update instead
+- **Field already exists**: there is no 409 -- field POST is an upsert and silently replaces the existing field. GET `/v2/schema/{table}/field/{id}` before creating, and if it exists, confirm the user means to replace it
 - **Invalid type**: List valid types from `../references/field-types.md`
 - **Publish failures**: Show error details, suggest checking field validity
 

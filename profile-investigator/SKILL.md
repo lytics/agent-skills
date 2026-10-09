@@ -195,7 +195,7 @@ For each condition, always show:
 - For FAIL: what value would be needed to pass
 
 ## Error Handling
-- **Profile not found**: Try alternative identity fields, suggest checking spelling. URL-encode values with special characters.
+- **Profile not found**: Try alternative identity fields, suggest checking spelling. URL-encode values with special characters -- `/api/entity` returns HTTP 200, not 404, for a missing profile: `message: "Not Found"` with a placeholder `{"segments": ["not_found", "all"]}`. Check for that before treating the response as a real profile.
 - **Segment not found**: List segments with similar names, suggest checking the slug.
 - **Complex FilterQL**: For deeply nested expressions, evaluate the top-level conditions first, then drill into failing branches.
 - **Missing fields**: If a profile field referenced in FilterQL doesn't exist on the profile, report it clearly -- this is often the root cause.

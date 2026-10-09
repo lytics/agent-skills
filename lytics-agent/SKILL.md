@@ -61,7 +61,7 @@ Route based on keywords and intent:
 **Route to**: `job-manager skill`
 
 ### Campaign / Journey Builder
-**Triggers**: "create flow", "build campaign", "set up journey", "welcome series", "nurture campaign", "email sequence", "multi-step campaign", "A/B test flow"
+**Triggers**: "create flow", "build campaign", "set up journey", "welcome series", "nurture campaign", "email sequence", "multi-step campaign"
 **Route to**: `campaign-flow-builder skill`
 
 ### Flows CRUD

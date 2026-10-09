@@ -60,15 +60,29 @@ Profile names are user-chosen; `sandbox` and `prod` are conventions, not require
 
 **Fallback:** if the file is missing, unreadable, or the requested profile name is not found, prompt the user to paste the token for that profile in-session. Session-only; never persist a prompted token.
 
-**Per-call env overrides:** when making API calls, export `LYTICS_API_TOKEN` / `LYTICS_API_URL` for the active profile in a subshell:
+**Per-profile calls:** never route a two-account call through `LYTICS_API_TOKEN` / `LYTICS_API_URL`. A prefix like `LYTICS_API_URL="$SRC_URL" curl "${LYTICS_API_URL}/..."` does not work: the shell expands `${LYTICS_API_URL}` in curl's arguments *before* the prefix assignment applies, so the call silently goes to whatever account is ambient. Name the profile's own variables in every call instead:
 
 ```bash
-LYTICS_API_TOKEN="$SRC_TOKEN" LYTICS_API_URL="$SRC_URL" \
-  curl -s "${LYTICS_API_URL}/v2/segment/${SEGMENT_ID}" \
-  -H "Authorization: ${LYTICS_API_TOKEN}"
+src() { p=$1; shift; curl -sS -H "Authorization: ${SRC_TOKEN:?SRC_TOKEN unset}" "$@" "${SRC_URL:?SRC_URL unset}${p}"; }
+dst() { p=$1; shift; curl -sS -H "Authorization: ${DST_TOKEN:?DST_TOKEN unset}" "$@" "${DST_URL:?DST_URL unset}${p}"; }
+
+src "/v2/segment/${SEGMENT_ID}"
+dst /v2/segment -X POST -H "Content-Type: application/json" --data-binary @segment.json
 ```
 
-This keeps per-call behavior compatible with `api-client.md` while supporting two accounts in one run.
+The `:?` guards make a missing profile variable fail loudly instead of falling through to another account. Shell state may not persist between tool calls, so define the helpers and resolve `SRC_*` / `DST_*` in the same command that uses them. When a peer skill's snippet uses `${LYTICS_API_URL}` / `${LYTICS_API_TOKEN}`, rewrite it to `src` or `dst` before running it.
+
+**Same-account guard:** before any write, resolve each profile's own aid and refuse to run if they match. `GET /v2/account` returns the token's account, or for a parent token the whole family, where the token's own account is the entry with `aid == parentaid`:
+
+```bash
+own_aid='.data | if length == 1 then .[0].aid else (map(select(.aid == .parentaid)) | .[0].aid) end'
+SRC_AID=$(src /v2/account | jq -r "$own_aid")
+DST_AID=$(dst /v2/account | jq -r "$own_aid")
+case "$SRC_AID:$DST_AID" in
+  *[!0-9:]*|:*|*:) echo "refusing: an account failed to resolve" ;;
+  *) [ "$SRC_AID" != "$DST_AID" ] || echo "refusing: source and destination are the same account" ;;
+esac
+```
 
 ## Rules
 

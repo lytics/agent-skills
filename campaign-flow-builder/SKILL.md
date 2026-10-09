@@ -1,6 +1,6 @@
 ---
 name: campaign-flow-builder
-description: Guided flow/journey creation from business intent -- multi-step campaigns with delays, conditionals, A/B tests, and exports. Use when the user wants to create a campaign, build a journey, or design a multi-step marketing flow.
+description: Guided flow/journey creation from business intent -- multi-step campaigns with delays, conditionals, and exports. Use when the user wants to create a campaign, build a journey, or design a multi-step marketing flow.
 metadata:
   arguments: description of the desired campaign or journey
 ---
@@ -8,7 +8,7 @@ metadata:
 # Campaign Flow Builder
 
 ## Purpose
-Guides users from business intent ("I want a welcome email series") to a complete, validated flow with entry segments, delays, conditional branches, A/B tests, and export steps. Follows the advisor pattern: understand the goal, suggest structure, iterate, then create.
+Guides users from business intent ("I want a welcome email series") to a complete, validated flow with entry segments, delays, conditional branches, and export steps. Follows the advisor pattern: understand the goal, suggest structure, iterate, then create.
 
 Flows are the most complex Lytics object -- this skill makes them approachable.
 
@@ -19,7 +19,7 @@ Requires authenticated API access. See `../references/auth.md` for credential re
 
 Flows use a **node-edge graph** representation (TranslatedFlow format):
 - **Nodes**: Steps in the journey (trigger, delay, export, conditional, A/B test, exit)
-- **Edges**: Connections between steps (with optional conditions or probabilities)
+- **Edges**: Connections between steps (with optional conditions; `probability` is ignored)
 
 ## Building a Flow
 
@@ -28,7 +28,7 @@ Flows use a **node-edge graph** representation (TranslatedFlow format):
 Classify the user's intent:
 - "Welcome email series" -> trigger on segment entry, delays between emails
 - "Re-engagement campaign" -> trigger on lapsed users, conditional check, export
-- "A/B test two offers" -> trigger, A/B split, two export paths
+- "A/B test two offers" -> not buildable here: A/B split probabilities are ignored by the API (see A/B Test under Node Types)
 - "Multi-channel nurture" -> trigger, delays, conditionals, multiple export channels
 
 Ask:
@@ -144,7 +144,7 @@ Conditions are defined on the **edges**, not the node. See Edges section.
   "label": "50/50 Test"
 }
 ```
-Probabilities are defined on the **edges**. Must sum to 1.0.
+**Not supported through this API.** `/v2/flow/ui` ignores edge `probability`, so an `ab_test` node saves without error and then sends **every** user down a single branch. Do not build A/B splits with this skill; tell the user the split must be set up another way and verified before the flow runs.
 
 **Exit (end of flow):**
 ```json
@@ -175,19 +175,9 @@ Probabilities are defined on the **edges**. Must sum to 1.0.
   }
 }
 ```
-Higher priority numbers are checked first. The default/fallback edge should have `"definition": ""` and `"priority": 1`.
+**Lower** priority numbers are checked first, and the first matching condition wins -- so give the most specific condition the smallest number. The default/fallback edge should have `"definition": ""` and `"priority": 1`; it is taken out of the ordering and used only when no other condition matches.
 
-**A/B test edge (with probability):**
-```json
-{
-  "id": "4000-5000",
-  "source": 4000,
-  "target": 5000,
-  "type": "connected",
-  "probability": 0.5
-}
-```
-All probabilities from the same source node must sum to 1.0.
+**A/B test edge:** not supported -- `probability` on an edge is ignored (see A/B Test above).
 
 #### Step ID Assignment
 
@@ -255,15 +245,6 @@ TRIGGER (in_segment: "Lapsed 30d")
   -> CONDITIONAL (opened email?)
      YES -> [Send Discount] -> EXIT
      NO  -> [Send Final Notice] -> EXIT
-```
-
-### A/B Test
-```
-TRIGGER (on_segment_entry: "Trial Users")
-  -> [Wait 1d]
-  -> A/B TEST (50/50)
-     A -> [Send Offer A] -> EXIT
-     B -> [Send Offer B] -> EXIT
 ```
 
 ### Multi-Channel Nurture

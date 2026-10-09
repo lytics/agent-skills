@@ -20,14 +20,14 @@ Requires authenticated API access. See `../references/auth.md` for credential re
 curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/job" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
 ```
-By default only shows non-terminal jobs (runnable, sleeping, paused, fault).
+Status values the API returns: `running`, `sleeping`, `paused`, `pausing`, `initializing`, `failed`, `completed`, `deleted`, `deleting`, `unknown`, and `fault-N` (N = error count; also used for a job sleeping in error backoff). Match faults by the `fault` prefix -- the API never returns `runnable`, `fault` or `killed`.
 
 | Query Parameter | Default | Description |
 |----------------|---------|-------------|
 | `workflow` | - | Filter by workflow slug |
 | `auth_ids` | - | Filter by auth IDs |
 | `show_completed` | false | Include completed jobs |
-| `show_deleted` | false | Include deleted jobs |
+| `show_all` | false | Include deleted (killed) jobs -- there is no working `show_deleted` filter |
 | `show_hidden` | false | Include hidden jobs |
 | `show_all` | false | Show everything (sets completed, deleted, hidden to true) |
 | `show_state` | false | Include WorkState details in response |
@@ -66,13 +66,18 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${WORKFLOW}" \
   -H "Content-Type: application/json" \
   -d '{ ... job config ... }'
 ```
+Create **starts the job immediately** (`run_job` defaults to `true`), so an export begins sending data the moment it is created. Say so in the confirmation gate, and pass `?run_job=false` when the user wants to review it before it runs.
 
 ### Update Job
+An update is not a merge. `description`, the quiet-window fields, `expires_at`, `meta`, `hidden` and `verbose_logging` are reset whenever the body omits them, and a sent `config` replaces the stored one wholesale. GET the job, change only what the user asked for, and PUT the whole object back; show the before/after diff in the confirmation gate.
 ```bash
+curl -s "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}" \
+  -H "Authorization: ${LYTICS_API_TOKEN}" | jq '.data' > job.json
+# ...edit job.json...
 curl -s -X PUT "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${WORKFLOW}/${JOB_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{ ... updated fields ... }'
+  --data-binary @job.json
 ```
 
 ### Job Lifecycle Commands
@@ -89,7 +94,8 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}/resum
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}/bounce" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
 
-# Kill (stop permanently)
+# Kill -- in v2 this is a delete: the job is soft-deleted, drops out of the job list,
+# and there is no API to undelete it. Prefer pause unless the user wants it gone.
 curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/job/${JOB_ID}/kill" \
   -H "Authorization: ${LYTICS_API_TOKEN}"
 
@@ -204,7 +210,7 @@ Use the confirmation-gate pattern.
 ### For Lifecycle Commands (pause, resume, bounce, kill)
 - **pause/resume**: Execute with brief confirmation
 - **bounce**: Explain this restarts the job, confirm
-- **kill**: Warn this permanently stops the job, require explicit confirmation
+- **kill**: Warn this **deletes** the job (no undelete through the API) and suggest pause as the reversible alternative; require explicit confirmation
 
 ## Error Handling
 - **Job not found (404)**: Check job ID, list available jobs

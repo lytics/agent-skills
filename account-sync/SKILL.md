@@ -88,7 +88,8 @@ Resume is the supported answer to "the run halted midway; what do I do?" Users s
 ### Step 1: Resolve Profiles
 1. Read `~/.lytics/accounts.toml`. If missing, proceed with prompt-only fallback.
 2. Resolve `<src-profile>` and `<dst-profile>` to `{token, url}` pairs. Prompt per missing entry.
-3. Ping each with a cheap read (e.g., `GET /v2/account` or `GET /v2/schema`). Fail fast on 401 with a clear message naming which profile's token was rejected.
+3. Make every call through the `src` / `dst` helpers from `../references/auth.md`, never through `LYTICS_API_URL` / `LYTICS_API_TOKEN` -- an env-prefixed call silently hits the ambient account, so a "sandbox to prod" run can overwrite the sandbox source. This applies to every snippet borrowed from a peer skill.
+4. Resolve each profile's own aid with the **Same-account guard** in `../references/auth.md`. Fail fast on 401 with a clear message naming which profile's token was rejected. Halt if either aid fails to resolve or the two match. Print both aids in the plan header (Step 5).
 
 ### Step 2: Select Source Objects
 Translate the selector into a concrete list of source objects:
@@ -170,6 +171,7 @@ Classify each node:
 - **skip** -- present; source and destination are equivalent (after stripping traceability line).
 - **conflict** -- present with same natural key but differing definition while running under `--create-only`, or a dep conflict under any mode. Terminal classification -- the plan surfaces it; see Dependency-Conflict Handling.
 - **drift-readonly** -- settings only; source and destination differ but `can_be_assigned: false` so the skill cannot write. Informational; surfaced in the plan but never executed.
+- **excluded** -- settings only; writable, but in the **Writable is not the same as safe to copy** table, so `sync settings` never writes it. Surfaced with its reason; only an explicit `sync setting <slug>` with a retype gate writes it.
 
 ### Step 5: Render Plan
 Print the full plan and wait for approval. Format:
@@ -177,8 +179,8 @@ Print the full plan and wait for approval. Format:
 ```
 ## Sync Plan: sandbox -> prod
 
-**Source**: sandbox (https://api.lytics.io)
-**Destination**: prod (https://api.lytics.io)
+**Source**: sandbox (https://api.lytics.io, aid 1234)
+**Destination**: prod (https://api.lytics.io, aid 5678)
 **Mode**: upsert     (use --create-only to refuse overwrites)
 
 ### Operations (in execution order)
@@ -351,15 +353,13 @@ Use the `segment-manager skill` conventions (`POST /v2/segment` for create, `PUT
 Before any schema write, determine the destination's schema-write mode (from `schema-manager skill`):
 
 ```bash
-LYTICS_API_TOKEN="$DST_TOKEN" LYTICS_API_URL="$DST_URL" \
-  curl -s "${LYTICS_API_URL}/v2/schema/patch/user" \
-  -H "Authorization: ${LYTICS_API_TOKEN}"
+dst /api/account/setting/enable_schema_patches | jq '.data.value'
 ```
 
-If it returns success (even an empty array), the destination uses **schema patches**. Otherwise use **direct publish**.
+If it is `true`, the destination uses **schema patches**. Otherwise (`false`, `null`) use **direct publish**. Do not probe by listing patches: `GET /v2/schema/patch/{table}` returns 200 on every account, patch-enabled or not.
 
 **Schema-patches path (preferred when available):**
-1. Create one named patch per sync run: `POST /v2/schema/patch/{table}` with `name: "sync-from-<src>-<ISO8601>"` and a description listing the run context.
+1. Create one patch per sync run: `POST /v2/schema/patch/{table}` with `tag: "sync-from-<src>-<ISO8601>"` and a description listing the run context. The key is `tag`, not `name` -- lio ignores `name`, and `/apply` rejects a patch without a tag.
 2. Add every schema field op to the patch via `POST /v2/schema/patch/{table}/{patch_id}/field`.
 3. Add every mapping op via `POST /v2/schema/patch/{table}/{patch_id}/mapping`.
 4. Before Step 6's confirmation, `GET /v2/schema/patch/{table}/{patch_id}` and include its diff in the rendered plan.
@@ -385,9 +385,9 @@ Before writing a job:
 2. Resolve `auth_ids`: look up each by `(label, type)` in the destination. If any is missing, treat the job as blocked and surface an auth blocker in the plan.
 3. **If the job's `workflow` is `webhook_triggers` or `webhook_enrichment`, remap `config.template_id` via the in-run template map.** If the source job has a `template_id` and the corresponding template isn't in the destination map, halt with a blocker (the template should have synced earlier in topological order; if it didn't, it was excluded from the selector).
 4. Remap any other fields the skill recognizes. For unknown `config` keys, copy them verbatim and include a **"review config carefully"** note on the job's op line. Job configs are workflow-specific; the skill does not attempt to understand every workflow.
-5. Job state is never auto-started. Default to the destination's normal post-create state (workflow-dependent) and let the user start via `job-manager` separately. Surface this in the plan.
+5. Never auto-start a job. `POST /v2/job` **starts the job immediately unless `?run_job=false` is passed** (`run_job` defaults to `true`), so a synced export would begin sending to the destination platform the moment it is created. Always create with `?run_job=false` and let the user start it via `job-manager` separately. Surface this in the plan.
 6. Apply traceability append.
-7. Write via `POST /v2/job` or `PUT /v2/job/{workflow}/{id}`.
+7. Write via `POST /v2/job?run_job=false` or `PUT /v2/job/{workflow}/{id}`. An update clears `description`, the quiet-window fields, `expires_at`, `meta`, `hidden` and `verbose_logging` whenever the body omits them, and a sent `config` replaces the stored one wholesale, so PUT the complete object -- never a partial body.
 
 ### Connections
 1. Resolve the referenced auth in the destination by `(label, type)`. If missing, block.
@@ -440,21 +440,20 @@ Account settings are a different shape from everything else in this skill: flat 
 
 ```bash
 # List all settings (returns 99+ items typically; each is {slug, category, sub_category, value, field, can_be_assigned, subject})
-curl -s "${API}/api/account/setting" -H "Authorization: ${TOKEN}"
+src /api/account/setting      # or: dst /api/account/setting
 
 # Get one setting
-curl -s "${API}/api/account/setting/${SLUG}" -H "Authorization: ${TOKEN}"
+dst "/api/account/setting/${SLUG}"
 
 # Update one setting -- body is the raw JSON VALUE (not wrapped in an object)
-curl -s -X PUT "${API}/api/account/setting/${SLUG}" \
-  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
+dst "/api/account/setting/${SLUG}" -X PUT -H "Content-Type: application/json" \
   -d 'true'                             # boolean
-curl ... -d '"finance"'                  # string
-curl ... -d '["mobile","web"]'           # array
-curl ... -d '500'                        # number
+dst ... -d '"finance"'                   # string
+dst ... -d '["mobile","web"]'            # array
+dst ... -d '500'                         # number
 
 # Delete (reset to unset)
-curl -s -X DELETE "${API}/api/account/setting/${SLUG}" -H "Authorization: ${TOKEN}"
+dst "/api/account/setting/${SLUG}" -X DELETE
 ```
 
 For idconfig and rank, use the existing v2 schema endpoints (`schema-manager skill`): `/v2/schema/{table}/idconfig` and `/v2/schema/{table}/rank`.
@@ -489,7 +488,21 @@ Each setting has a boolean `can_be_assigned`. Settings where this is `false` are
 Behavior in this skill:
 - During compare, settings with `can_be_assigned: false` that differ are classified as `drift-readonly` (informational only) and surfaced in the plan -- never as `create` or `update`.
 - The skill never attempts a write on `can_be_assigned: false`. If a user explicitly requests `sync setting <slug>` for a read-only setting, refuse with a clear message.
-- Typical ratio observed: ~75% of settings are writable (`can_be_assigned: true`); the rest require platform-level intervention.
+
+### Writable is not the same as safe to copy
+
+`can_be_assigned: true` only means the API accepts a write. It says nothing about whether copying the value between accounts is safe, and lio's own `Copyable` / `Immutable` flags are not exposed in the JSON. These settings are **excluded from `sync settings`** and only move via an explicit `sync setting <slug>` with a retype-to-confirm gate (same as `idconfig`):
+
+| Setting | Why |
+|---------|-----|
+| category `security` (2FA, password policy, login) | Copying can lock users out of the destination account |
+| category `API` (incl. `api_ip_whitelist`) | A sandbox IP allowlist can lock out prod API access -- including this run's own token, mid-run |
+| `cull_user_filter` | Profiles matching it are dropped from the destination nightly |
+| `workflow_exclude_segments` | Holds account-scoped segment ids, which mean nothing (or something else) in the destination |
+| `enable_schema_patches` | Never PUT it. Switching on goes through `POST /v2/schema/patch/migrate`, which saves in-progress drafts into a patch first; a raw PUT skips that |
+| `schema_user_private_fields` | Immutable: any write returns 400 `Field ... is immutable.` -- even re-submitting the current value |
+
+A 400 `Field <slug> is immutable.` means the setting cannot be written by anyone through the API; classify it as `drift-readonly`. Never pick `schema_user_private_fields` for the write-path probe below.
 
 ### Non-public settings are invisible
 
@@ -532,7 +545,7 @@ A 404 on `GET /v2/schema/{table}/idconfig` means the account has no idconfig set
 
 When a run includes multiple types (e.g., `sync all`), settings are processed **first**, before segments/schema/flows/jobs. Two reasons:
 
-1. Any setting that flips the destination's schema-write mode (e.g., a future `enable_schema_patches` setting if/when it becomes writable) must be applied before the schema phase computes its mode.
+1. A setting change can flip the destination's schema-write mode. `enable_schema_patches` itself is writable but excluded from settings sync (see **Writable is not the same as safe to copy**); a mode switch goes through `POST /v2/schema/patch/migrate` outside this skill.
 2. `idconfig` changes the profile merge rules that downstream segments and flows depend on.
 
 **After the settings phase completes**, the schema-mode probe (see Schema Fields and Mappings section) must be **re-run** before the schema phase executes. The cached pre-settings schema-mode decision is stale if any setting just altered the mode.
@@ -545,8 +558,8 @@ Account settings have no `description` or `notes` field in which to embed an `[a
 
 | Invocation | Behavior |
 |------------|----------|
-| `sync settings from <src> to <dst>` | All writable settings (`can_be_assigned: true`) that differ, plus per-table idconfig and rank for every schema table. Bulk-operation gate fires. |
-| `sync setting <slug> from <src> to <dst>` | Single setting by slug. Refuses if `can_be_assigned: false`. |
+| `sync settings from <src> to <dst>` | All writable settings (`can_be_assigned: true`) that differ, **minus the exclusion table above**, plus per-table idconfig and rank for every schema table. Bulk-operation gate fires; excluded settings that differ are listed in the plan as `excluded` with the reason. |
+| `sync setting <slug> from <src> to <dst>` | Single setting by slug. Refuses if `can_be_assigned: false`. Settings in the exclusion table need a retype-to-confirm gate. |
 | `sync idconfig [<table>] from <src> to <dst>` | Per-table idconfig; `<table>` defaults to all tables. Extra confirmation gate fires per table. |
 | `sync rank [<table>] from <src> to <dst>` | Per-table field rank; `<table>` defaults to all tables. Standard confirmation gate only. |
 
@@ -646,7 +659,7 @@ Applied in this order of defense:
 5. **Stop-on-first-error** -- no silent continuation past failures. Partial successes remain in the destination; the manifest records `success`, the failed op, and every untouched `pending` op so the user can resume via `resume <manifest>` or `sync ... --resume <manifest>`.
 6. **Read-after-write verification** -- after every successful write, GET the object and diff against expected (Read-After-Write Verification section). Record `server_drift` in the manifest.
 7. **In-flight patch cleanup on halt** -- draft schema patches are never left orphaned; see Error Handling.
-8. **Schema-mode re-probe after settings phase** -- if a run touches settings and schema in the same invocation, re-probe the destination schema-write mode between the two phases. A setting may have flipped `enable_schema_patches` (or similar) and the cached pre-settings decision is stale.
+8. **Schema-mode re-probe after settings phase** -- if a run touches settings and schema in the same invocation, re-probe the destination schema-write mode between the two phases. A setting change may have altered the mode and the cached pre-settings decision is stale.
 9. **Manifest** -- written to `~/.lytics/sync/<ISO8601>-<src>-to-<dst>.json` on every run (including aborted ones where at least one write succeeded).
 
 ### Idempotency Invariant

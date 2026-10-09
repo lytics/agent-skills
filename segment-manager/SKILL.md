@@ -54,6 +54,11 @@ curl -s -X POST "${LYTICS_API_URL:-https://api.lytics.io}/v2/segment" \
 ```
 
 ### Update Segment
+An update can silently create a *different* segment or rename this one:
+- If `segment_ql` omits `FROM`, the table resets to `user`. For a non-user segment the update then misses the original and **creates a new segment** -- and the call still succeeds.
+- If the `ALIAS` differs from the current slug and no `slug_name` is sent, the slug is renamed, which breaks every other segment that does `INCLUDE <old_slug>`.
+
+So GET the segment first, keep its `FROM <table>` and `ALIAS <slug>` in the new `segment_ql`, and after the PUT check that the returned `.data.id` equals `${SEGMENT_ID}`. If it doesn't, stop and tell the user a new segment was created.
 ```bash
 curl -s -X PUT "${LYTICS_API_URL:-https://api.lytics.io}/v2/segment/${SEGMENT_ID}" \
   -H "Authorization: ${LYTICS_API_TOKEN}" \
@@ -170,7 +175,7 @@ Before creating/updating a segment:
 
 ## Error Handling
 - **Invalid FilterQL**: Parse the validation error, identify the issue, suggest fix
-- **Slug conflict (409)**: Suggest alternative slug name
+- **Slug conflict**: there is no 409 on create -- a taken slug is silently renamed to `<slug>_1`, `<slug>_2`, ... and the call still succeeds. Always report `.data.slug_name` and `.data.id` from the response, never the slug you sent. (On update, a taken slug is a 400 `Slug is already used.`)
 - **Empty segment (size 0)**: Warn user, suggest broadening criteria
 - **Very large segment**: Note the size and ask user to confirm intent
 

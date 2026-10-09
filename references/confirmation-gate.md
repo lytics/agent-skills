@@ -83,4 +83,4 @@ Failed to create segment: [error message from API]
 - For delete operations, emphasize the irreversibility
 
 ## Dependencies
-- References: `foundation/api-client.md`
+- References: `api-client.md`
