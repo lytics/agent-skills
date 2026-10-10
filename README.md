@@ -4,9 +4,37 @@ Agent skills for interacting with the [Lytics](https://www.lytics.com) Customer 
 
 ## Installation
 
+Install every skill for one agent, non-interactively:
+
 ```bash
-npx skills add lytics/agent-skills
+npx skills add lytics/agent-skills --skill '*' --agent claude-code -y
 ```
+
+- Repeat `--agent` for more than one agent (`--agent claude-code --agent cursor`); a comma-separated list is rejected. Without `--agent`, the CLI asks which agents to install into, and the "Universal (.agents/skills) -- always included" group it shows is a list of *agents*, not extra skills.
+- `--skill` takes skill names (`--skill lytics-audiences --skill lytics-schema`) or `'*'`.
+- Plain `npx skills add lytics/agent-skills` walks through both choices interactively.
+
+Each skill is self-contained: the shared files it relies on (auth, confirmation gate, FilterQL grammar, ...) ship inside its own `references/` folder.
+
+### Upgrading from 0.3.x or earlier
+
+0.4.0 merged 24 skills into 8 and renamed them all with a `lytics-` prefix. Installing the new ones does not remove the old ones, and two generations side by side will compete for the same requests, so remove the old names first:
+
+```bash
+npx skills remove audience-builder audience-advisor audience-snapshot segment-manager filterql-builder \
+  entity-lookup profile-explorer profile-investigator \
+  integration-advisor integration-setup connection-manager job-manager \
+  schema-discovery schema-manager schema-optimizer data-health-monitor stream-inspector \
+  flow-manager campaign-flow-builder export-debugger webhook-template-builder \
+  account-sync content-affinity-advisor lytics-agent -y
+npx skills add lytics/agent-skills --skill '*' --agent claude-code -y
+```
+
+Add `-g` to `remove` if you installed globally.
+
+### Contributing
+
+The top-level [`references/`](references/) folder is the only copy to edit. Skills link these files as `references/<file>.md`. After changing one, or linking a new one from a skill, run `scripts/sync-references.sh` to refresh each skill's copy. CI fails a PR whose copies are out of date.
 
 ## Environment Setup
 
@@ -19,66 +47,17 @@ See [`references/auth.md`](references/auth.md) for the full authentication contr
 
 ## Available Skills
 
-### Audiences & Segments
+Each skill covers one area and has modes; its `SKILL.md` says which file to read for each.
 
-| Skill | Description |
-|-------|-------------|
-| `audience-advisor` | Strategic audience guidance -- helps choose the right audience for a business goal |
-| `audience-builder` | Create or update audience segments from natural language descriptions |
-| `audience-snapshot` | Analyze audience composition -- demographics, field values, coverage, distributions |
-| `segment-manager` | Segment CRUD, validation, and sizing operations |
-| `filterql-builder` | Translate structured conditions into valid FilterQL expressions |
+| Skill | Covers | Modes | Replaces (before 0.4.0) |
+|-------|--------|-------|-------------------------|
+| `lytics-audiences` | Audience segments and FilterQL | build, advise, snapshot, manage | audience-builder, audience-advisor, audience-snapshot, segment-manager, filterql-builder |
+| `lytics-profiles` | Individual profiles | lookup, explore, investigate | entity-lookup, profile-explorer, profile-investigator |
+| `lytics-integrations` | Providers, auth, connections, jobs, webhook templates, export debugging | advise, setup, connections, jobs, webhook-templates, export-debug | integration-advisor, integration-setup, connection-manager, job-manager, webhook-template-builder, export-debugger |
+| `lytics-schema` | Fields, mappings, identity config, patches | discover, manage, optimize | schema-discovery, schema-manager, schema-optimizer |
+| `lytics-data-health` | Is data flowing; streams | health-check, streams | data-health-monitor, stream-inspector |
+| `lytics-flows` | Flows / journeys | build, manage | campaign-flow-builder, flow-manager |
+| `lytics-content` | Content work: topics, Supertopics, content affinity | assess, advise, execute | content-affinity-advisor |
+| `lytics-account` | Account management: users and roles, API tokens, account settings, and copying metadata/settings between accounts (sandbox -> prod). Writes and cross-account sync run only when explicitly asked | users, tokens, settings, sync (compare, resume) | account-sync |
 
-### Profiles & Identity
-
-| Skill | Description |
-|-------|-------------|
-| `entity-lookup` | Look up user profiles by identity field and value |
-| `profile-explorer` | Interactive profile exploration -- lookup, segments, and event history |
-| `profile-investigator` | Diagnose segment membership and trace data lineage |
-
-### Data Integration
-
-| Skill | Description |
-|-------|-------------|
-| `integration-advisor` | Strategic guidance for setting up the right data integration |
-| `integration-setup` | Guided end-to-end setup for data integrations |
-| `connection-manager` | Browse and manage connections, auth providers, and credentials |
-| `job-manager` | Job lifecycle management -- create, pause, resume, bounce, kill |
-| `webhook-template-builder` | Research-driven authoring of Lytics webhook templates -- fetches destination docs, drafts and tests transforms, emits a ready-to-go webhook job blueprint |
-| `export-debugger` | Trace why a user was or wasn't exported to a platform |
-
-### Schema & Data
-
-| Skill | Description |
-|-------|-------------|
-| `schema-discovery` | Discover profile schema fields, types, and sample values |
-| `schema-manager` | Browse and modify schema fields, mappings, and identity config |
-| `schema-optimizer` | Analyze schema usage and suggest improvements |
-| `stream-inspector` | Inspect data streams, view stats, and browse recent events |
-
-### Content & Personalization
-
-| Skill | Description |
-|-------|-------------|
-| `content-affinity-advisor` | Assess context layers and topics, build an advisement plan (taxonomy, Affinities, micro-audiences), and execute approved curation actions |
-
-### Campaigns & Flows
-
-| Skill | Description |
-|-------|-------------|
-| `campaign-flow-builder` | Guided multi-step campaign/journey creation |
-| `flow-manager` | Flow/journey CRUD and step management |
-
-### Cross-Account Operations
-
-| Skill | Description |
-|-------|-------------|
-| `account-sync` | Copy segments, schema, flows, jobs, connections, auth, and account-level configuration (settings, per-table idconfig, field rankings) between Lytics accounts (e.g., sandbox -> prod) with dep traversal, upsert-by-natural-key, dry-run safety, and an extra retype gate for `idconfig` |
-
-### Monitoring & General
-
-| Skill | Description |
-|-------|-------------|
-| `data-health-monitor` | Single-command health check across streams, jobs, schema, and quotas |
-| `lytics-agent` | Top-level agent that routes requests to the appropriate skill |
+There is no router skill any more (`lytics-agent` was removed): agents pick a skill from its description, so each description says when it applies.

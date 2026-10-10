@@ -4,6 +4,54 @@ All notable changes to this skills repo are documented here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-10-09
+
+### Added
+
+- **Account management in `lytics-account`**: list users and their roles,
+  invite users, change roles, remove users; list, create, rotate, and revoke
+  API tokens; read and change single-account settings, with warnings for
+  settings that can lock people out (IP allowlist, 2FA, password policy).
+  Checked against lio `develop` source; not yet exercised against a running
+  instance.
+
+### Changed (breaking: every skill name)
+
+- **24 skills merged into 8**, each named `lytics-*` with modes in separate
+  files that the agent reads only when needed (see the README table for the
+  old -> new mapping, and its upgrade note: installing does not remove the old
+  names). Overlapping skills competed for the same requests; one skill per
+  area now owns them.
+- **`lytics-agent` (the keyword router) removed.** Agents choose skills from
+  their descriptions; every description now names Lytics and lists the intents
+  it covers.
+- **`lytics-integrations` also owns webhook templates and export debugging**
+  (formerly `webhook-template-builder` and `export-debugger`);
+  **`lytics-content`** (formerly `content-affinity-advisor`) is the home for
+  content work; **`lytics-account`** (formerly `account-sync`) is the home for
+  account management. Its writes and cross-account sync run only when
+  explicitly asked (stated in its description).
+- **`references/api.md`** replaces `api-client.md` and
+  `api-response-format.md`, and documents both response shapes as the live
+  API returns them: `/v2` errors in `errors[0].message`, `/api` errors in
+  `message`, and a rejected token in the `/api` shape on both.
+
+### Fixed
+
+- **Job list flags**: killed jobs appear with `show_all=true`, or with
+  `show_deleted=true` and `show_completed=true` together, not with either flag
+  alone; failed jobs are already in the default list.
+- **Shared references were never installed** ([#1](https://github.com/lytics/agent-skills/issues/1)).
+  `npx skills add` copies only each skill's own folder, so every
+  `../references/*.md` link (auth rules, confirmation gate, FilterQL grammar,
+  field types) pointed at nothing once installed. Each skill now ships the
+  references it uses in its own `references/` folder, generated from the
+  top-level `references/` by `scripts/sync-references.sh`; CI fails a PR whose
+  copies are stale.
+- **README install instructions**: a non-interactive install for one agent,
+  how to pick several skills or agents (repeat the flag; comma lists are
+  rejected), and what the "always included" agents list means.
+
 ## [0.3.1] - 2026-10-09
 
 ### Fixed
