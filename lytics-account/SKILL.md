@@ -21,7 +21,7 @@ Users, roles, tokens, settings:
 - **Role slugs are not validated on users**: a typo is stored and grants nothing. Check slugs against `GET /v2/account/{aid}?roles=true` -> `roles_available` (`can_be_assigned: true`).
 - **`POST /v2/user` on an existing member resets their roles** here and on every child account (to only `authed2` if `roles` is omitted). Use it only to invite.
 - **Removing a user is irreversible**: `DELETE /v2/user/{id}` drops their access, and deletes the user entirely if this was their last account. The API has no last-admin check; never leave the account without an `admin`, and don't remove or demote the caller unless asked.
-- **Token creation needs a user (login) token.** `POST /api/auth/createtoken` with an API token returns `403 This endpoint is available only via user tokens.`
+- **Token creation needs a user (login) token.** `POST /api/auth/createtoken` with an API token returns `403 Not authorized: This endpoint is available only via user tokens.`
 - **A token's value is shown once**, in the create response; reads never return it. A token created without `expires` never expires.
 - **Revoking a token is a permanent delete** (`DELETE /v2/auth/{id}`); every client using it breaks. The same endpoint deletes integration credentials, so confirm `type == "lytics-auth-token"`; never revoke `internal` tokens or the session's own token.
 - **`api_ip_whitelist` can lock everyone out**, this session included: requests from IPs outside it get 403, and a locked-out caller cannot undo it. Security-category settings change every user's login. Both need a retype gate ([settings.md](settings.md#high-risk-settings)).

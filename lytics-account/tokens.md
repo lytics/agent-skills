@@ -25,7 +25,7 @@ Each token: `id`, `type` (`"lytics-auth-token"` for API tokens), `label`, `descr
 
 `POST /api/auth/createtoken` -- an `/api` endpoint, so errors are in `.message`.
 
-- **Requires a user (login) token.** Called with an API token it returns `403 "This endpoint is available only via user tokens."` In the CLI, `LYTICS_API_TOKEN` is usually an API token: tell the user to create the token in the Lytics UI instead, or to supply a user token for this call only.
+- **Requires a user (login) token.** Called with an API token it returns `403 "Not authorized: This endpoint is available only via user tokens."` In the CLI, `LYTICS_API_TOKEN` is usually an API token: tell the user to create the token in the Lytics UI instead, or to supply a user token for this call only.
 - Body fields:
   | Field | Rule |
   |---|---|

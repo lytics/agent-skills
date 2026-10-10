@@ -53,7 +53,7 @@ Only `value` is user-owned content. The rest (`field`, `category`, `sub_category
 
 Each setting has a boolean `can_be_assigned`. Settings where this is `false` are read-only from the user's perspective -- the API returns **403** on attempted updates:
 
-> `"This setting %q is not editable, talk to your account manager."`
+> `"Not authorized: This setting \"<slug>\" is not editable, talk to your account manager."`
 
 Behavior in this skill:
 - During compare, settings with `can_be_assigned: false` that differ are classified as `drift-readonly` (informational only) and surfaced in the plan -- never as `create` or `update`.
@@ -70,9 +70,9 @@ Behavior in this skill:
 | `cull_user_filter` | Profiles matching it are dropped from the destination nightly |
 | `workflow_exclude_segments` | Holds account-scoped segment ids, which mean nothing (or something else) in the destination |
 | `enable_schema_patches` | Never PUT it. Switching on goes through `POST /v2/schema/patch/migrate`, which saves in-progress drafts into a patch first; a raw PUT skips that |
-| `schema_user_private_fields` | Immutable: any write returns 400 `Field ... is immutable.` -- even re-submitting the current value |
+| `schema_user_private_fields` | Immutable: any write returns 400 `Could not update account: field schema_user_private_fields is immutable.` -- even re-submitting the current value |
 
-A 400 `Field <slug> is immutable.` means the setting cannot be written by anyone through the API; classify it as `drift-readonly`. Never pick `schema_user_private_fields` for the write-path probe below.
+A 400 `Could not update account: field <slug> is immutable.` means the setting cannot be written by anyone through the API; classify it as `drift-readonly`. Never pick `schema_user_private_fields` for the write-path probe below.
 
 ### Non-public settings are invisible
 

@@ -18,8 +18,8 @@ curl -sS -w '\n%{http_code}\n' -X PUT "${LYTICS_API_URL:-https://api.lytics.io}/
   -H "Authorization: ${LYTICS_API_TOKEN}" -H "Content-Type: application/json" --data-binary 'true'
 ```
 
-- `can_be_assigned: false` means read-only: a PUT or DELETE returns `403 This setting "<slug>" is not editable, talk to your account manager.` Don't attempt it.
-- An unknown slug returns 404. A value that does not match `field.type` returns 400. `400 Field <slug> is immutable.` means no one can change it through the API.
+- `can_be_assigned: false` means read-only: a PUT or DELETE returns `403 Not authorized: This setting "<slug>" is not editable, talk to your account manager.` Don't attempt it.
+- An unknown slug returns 404. A value that does not match `field.type` returns 400. `400 Could not update account: field <slug> is immutable.` (even when re-sending the current value) means no one can change it through the API.
 - Read the setting back after every write and confirm `.value` (the server may transform values).
 - Side effects (query reloads, content affinity sync, jstag cache flush): see "Write workflow per-setting" in [sync-settings.md](sync-settings.md).
 

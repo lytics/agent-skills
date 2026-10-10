@@ -29,7 +29,7 @@ jq --argjson aid "$AID" '.data[] | {email, roles: ((.accounts // [])[] | select(
 ## Roles
 
 - **Read the account's role list, don't hardcode it.** An account package can replace the whole default role set, so the valid slugs differ per account. Offer only `roles_available` entries with `can_be_assigned: true`.
-- Two families exist: legacy bundles (`type: "composite"`, e.g. `admin`, `marketer`, `data_manager`, `observer`) and granular `v2_*` roles (`type: "base"`), mostly in `view`/`manage` pairs (`v2_segment_view` / `v2_segment_manage`, `v2_flow_view` / `v2_flow_manage`, ...). `manage` is the read/write half of a pair.
+- Role `type` is `composite`, `base`, or `additional`. Two main families: legacy bundles (`type: "composite"`, e.g. `admin`, `marketer`, `data_manager`, `observer`) and granular `v2_*` roles (`type: "base"`), mostly in `view`/`manage` pairs (`v2_segment_view` / `v2_segment_manage`, `v2_flow_view` / `v2_flow_manage`, ...). `manage` is the read/write half of a pair.
 - `authed2` is the baseline role. The server adds it to every user-account role list, so it is always present and never needs sending.
 - **The server does not validate role slugs on users.** A misspelled slug is stored as-is and grants nothing. Check every slug against `roles_available` before writing.
 
