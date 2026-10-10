@@ -42,7 +42,7 @@ Typical sequence: advise -> build -> snapshot. A goal-oriented build request sho
 
 - `lytics-schema`: find which fields exist, their types, and value distributions before mapping concepts to fields; add a missing field.
 - `lytics-profiles`: look up an individual profile and the segments it belongs to.
-- `lytics-content-affinity`: set up or curate content topics when affinities are not configured for advise mode.
+- `lytics-content`: set up or curate content topics when affinities are not configured for advise mode.
 - `lytics-integrations`: export or activate a segment to a destination once it exists.
 - `lytics-flows`: use a segment as a flow entry audience.
-- `lytics-account-sync`: copy a segment to another account.
+- `lytics-account`: copy a segment to another account.

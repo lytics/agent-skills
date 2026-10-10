@@ -36,7 +36,6 @@ Read the mode file before acting in that mode.
 ## Related skills
 
 - `lytics-audiences` -- the flow's entry segment, or a segment a condition depends on, does not exist yet; create it there, then come back.
-- `lytics-integrations` -- the export steps need a connection/auth or job set up, or an export step's work needs debugging as a job.
-- `lytics-export-debugger` -- a running flow's export step is not delivering.
+- `lytics-integrations` -- the export steps need a connection/auth or job set up, an export step's work needs debugging as a job, or a running flow's export step is not delivering (export-debug mode).
 - `lytics-schema` -- a condition references a field and you need to confirm it exists and its type.
-- `lytics-account-sync` -- copying flows between accounts (e.g. sandbox to prod).
+- `lytics-account` -- copying flows between accounts (e.g. sandbox to prod).

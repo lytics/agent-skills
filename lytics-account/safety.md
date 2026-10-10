@@ -9,7 +9,7 @@ Applied in this order of defense:
 1. **`--dry-run` / `compare`** -- no writes. The plan is the only output.
 2. **Plan preview + confirmation gate** -- mandatory on any non-dry-run invocation. Follows `references/confirmation-gate.md`.
 3. **Bulk-operation gate** -- `all` and `--prefix` selectors (and `compare` across all types) require a second confirmation showing the object count and a sample of up to 5 names. If count > 50, require the user to retype `confirm <count>` to proceed.
-4. **Retype gate for `idconfig`** -- in addition to the standard confirmation, every `idconfig` write requires the user to retype `confirm idconfig <table>` verbatim. See [settings.md](settings.md#idconfig-requires-an-extra-confirmation-gate).
+4. **Retype gate for `idconfig`** -- in addition to the standard confirmation, every `idconfig` write requires the user to retype `confirm idconfig <table>` verbatim. See [sync-settings.md](sync-settings.md#idconfig-requires-an-extra-confirmation-gate).
 5. **Stop-on-first-error** -- no silent continuation past failures. Partial successes remain in the destination; the manifest records `success`, the failed op, and every untouched `pending` op so the user can resume via `resume <manifest>` or `sync ... --resume <manifest>`.
 6. **Read-after-write verification** -- after every successful write, GET the object and diff against expected ([normalization.md](normalization.md#read-after-write-verification)). Record `server_drift` in the manifest.
 7. **In-flight patch cleanup on halt** -- draft schema patches are never left orphaned; see In-Flight Schema Patch Cleanup (below).

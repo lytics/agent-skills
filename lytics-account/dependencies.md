@@ -60,7 +60,7 @@ Classify each node:
 - **skip** -- present; source and destination are equivalent (after stripping traceability line; see [normalization.md](normalization.md)).
 - **conflict** -- present with same natural key but differing definition while running under `--create-only`, or a dep conflict under any mode. Terminal classification -- the plan surfaces it; see Dependency-Conflict Handling (below).
 - **drift-readonly** -- settings only; source and destination differ but `can_be_assigned: false` so the skill cannot write. Informational; surfaced in the plan but never executed.
-- **excluded** -- settings only; writable, but in the **Writable is not the same as safe to copy** table ([settings.md](settings.md#writable-is-not-the-same-as-safe-to-copy)), so `sync settings` never writes it. Surfaced with its reason; only an explicit `sync setting <slug>` with a retype gate writes it.
+- **excluded** -- settings only; writable, but in the **Writable is not the same as safe to copy** table ([sync-settings.md](sync-settings.md#writable-is-not-the-same-as-safe-to-copy)), so `sync settings` never writes it. Surfaced with its reason; only an explicit `sync setting <slug>` with a retype gate writes it.
 
 ## Cross-Reference Remapping
 

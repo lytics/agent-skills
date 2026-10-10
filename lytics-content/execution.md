@@ -204,7 +204,7 @@ Every change to a pre-existing Supertopic is a handoff, even adding topics.
 Hand off to the `lytics-audiences` skill, with the FilterQL, a name (which should signal that this skill created it), the description and the reach notes. Confirm the recency field exists first. Changes to existing audiences are always handoffs, sized with Rule 4.
 
 ### `activate`
-Hand off to the `lytics-integrations` skill / the `lytics-integrations` skill, or the `lytics-flows` skill.
+Hand off to the `lytics-integrations` skill, or the `lytics-flows` skill.
 
 ### `custom_topic_rule`, `page_topic_edit`, `reclassify_pages` (UI or Lytics team only; not automated)
 Write each one as steps for a person:

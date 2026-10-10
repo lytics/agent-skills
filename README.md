@@ -18,7 +18,7 @@ Each skill is self-contained: the shared files it relies on (auth, confirmation 
 
 ### Upgrading from 0.3.x or earlier
 
-0.4.0 merged 24 skills into 10 and renamed them all with a `lytics-` prefix. Installing the new ones does not remove the old ones, and two generations side by side will compete for the same requests, so remove the old names first:
+0.4.0 merged 24 skills into 8 and renamed them all with a `lytics-` prefix. Installing the new ones does not remove the old ones, and two generations side by side will compete for the same requests, so remove the old names first:
 
 ```bash
 npx skills remove audience-builder audience-advisor audience-snapshot segment-manager filterql-builder \
@@ -53,13 +53,11 @@ Each skill covers one area and has modes; its `SKILL.md` says which file to read
 |-------|--------|-------|-------------------------|
 | `lytics-audiences` | Audience segments and FilterQL | build, advise, snapshot, manage | audience-builder, audience-advisor, audience-snapshot, segment-manager, filterql-builder |
 | `lytics-profiles` | Individual profiles | lookup, explore, investigate | entity-lookup, profile-explorer, profile-investigator |
-| `lytics-integrations` | Providers, auth, connections, jobs | advise, setup, connections, jobs | integration-advisor, integration-setup, connection-manager, job-manager |
+| `lytics-integrations` | Providers, auth, connections, jobs, webhook templates, export debugging | advise, setup, connections, jobs, webhook-templates, export-debug | integration-advisor, integration-setup, connection-manager, job-manager, webhook-template-builder, export-debugger |
 | `lytics-schema` | Fields, mappings, identity config, patches | discover, manage, optimize | schema-discovery, schema-manager, schema-optimizer |
 | `lytics-data-health` | Is data flowing; streams | health-check, streams | data-health-monitor, stream-inspector |
 | `lytics-flows` | Flows / journeys | build, manage | campaign-flow-builder, flow-manager |
-| `lytics-export-debugger` | Why one user was or wasn't exported | -- | export-debugger |
-| `lytics-webhook-templates` | Webhook templates for custom destinations | -- | webhook-template-builder |
-| `lytics-content-affinity` | Topics, Supertopics, content affinity | assess, advise, execute | content-affinity-advisor |
-| `lytics-account-sync` | Copy metadata and settings between accounts (sandbox -> prod). Only runs when explicitly asked: it writes to the destination account | sync, compare, resume | account-sync |
+| `lytics-content` | Content work: topics, Supertopics, content affinity | assess, advise, execute | content-affinity-advisor |
+| `lytics-account` | Account management: users and roles, API tokens, account settings, and copying metadata/settings between accounts (sandbox -> prod). Writes and cross-account sync run only when explicitly asked | users, tokens, settings, sync (compare, resume) | account-sync |
 
 There is no router skill any more (`lytics-agent` was removed): agents pick a skill from its description, so each description says when it applies.

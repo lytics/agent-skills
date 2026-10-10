@@ -1,10 +1,12 @@
 ---
-name: lytics-content-affinity
-description: "Lytics CDP: assess, advise on, and curate content affinity -- context layers, topics, Supertopics, and topic-based micro-audiences. Use when the user wants to audit their Lytics topic map, clean up or enrich topics, design Supertopics, build audiences from content interest, or execute a content/topic curation plan."
+name: lytics-content
+description: "Lytics CDP: content work -- assess, advise on, and curate how a Lytics account understands its content: context layers, the topic map, topic and page blocks, Supertopics, content affinity scores, and topic-based micro-audiences. Use when the user asks about their Lytics content or topics, wants to audit or clean up the topic map, enrich or block topics, design Supertopics, check content affinity quality, build audiences from content interest, or execute a content/topic curation plan."
 license: MIT
 ---
 
-# Content Affinity Advisor
+# Lytics Content
+
+The home for content work in Lytics. Today it covers content affinity; other content capabilities belong here as they are added.
 
 ## Purpose
 Help a Lytics customer get a topic map that actually means something, then turn it into Supertopics and audiences they can activate.
@@ -129,7 +131,7 @@ Follow `execution.md`.
 
 ### 5. Hand off
 - Audience creation goes to the `lytics-audiences` skill.
-- Activation goes to the `lytics-integrations` skill / the `lytics-integrations` skill.
+- Activation goes to the `lytics-integrations` skill.
 - Journey routing by affinity goes to the `lytics-flows` skill.
 - Setup work (new layer, stream, schema mapping) is handed to the person, or to a dedicated setup skill.
 

@@ -36,7 +36,7 @@ Auth is provided by the platform session. The runtime injects the token — skil
 
 The orchestrator provides credentials via the agent's environment or execution context. Skills consume them the same way as CLI mode — through `LYTICS_API_TOKEN` / `LYTICS_API_URL` — but the values are injected by the orchestrator rather than set by the user.
 
-### Multi-Account (account-sync)
+### Multi-Account (lytics-account sync)
 
 When operating against two accounts simultaneously, credentials are resolved per-account from a profile config file rather than from the session environment.
 

@@ -1,4 +1,4 @@
-# Account Settings
+# Sync: account settings
 
 `account.setting`, per-table `idconfig`, and per-table `rank`: endpoints, writability, the exclusion table, the idconfig retype gate, and phase ordering. Read before any `sync settings`, `sync setting`, `sync idconfig`, or `sync rank`.
 

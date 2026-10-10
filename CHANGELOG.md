@@ -6,9 +6,18 @@ versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.4.0] - 2026-10-09
 
+### Added
+
+- **Account management in `lytics-account`**: list users and their roles,
+  invite users, change roles, remove users; list, create, rotate, and revoke
+  API tokens; read and change single-account settings, with warnings for
+  settings that can lock people out (IP allowlist, 2FA, password policy).
+  Checked against lio `develop` source; not yet exercised against a running
+  instance.
+
 ### Changed (breaking: every skill name)
 
-- **24 skills merged into 10**, each named `lytics-*` with modes in separate
+- **24 skills merged into 8**, each named `lytics-*` with modes in separate
   files that the agent reads only when needed (see the README table for the
   old -> new mapping, and its upgrade note: installing does not remove the old
   names). Overlapping skills competed for the same requests; one skill per
@@ -16,8 +25,12 @@ versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`lytics-agent` (the keyword router) removed.** Agents choose skills from
   their descriptions; every description now names Lytics and lists the intents
   it covers.
-- **`lytics-account-sync` only runs when explicitly asked** (stated in its
-  description), since it writes to the destination account.
+- **`lytics-integrations` also owns webhook templates and export debugging**
+  (formerly `webhook-template-builder` and `export-debugger`);
+  **`lytics-content`** (formerly `content-affinity-advisor`) is the home for
+  content work; **`lytics-account`** (formerly `account-sync`) is the home for
+  account management. Its writes and cross-account sync run only when
+  explicitly asked (stated in its description).
 - **`references/api.md`** replaces `api-client.md` and
   `api-response-format.md`, and documents both response shapes as the live
   API returns them: `/v2` errors in `errors[0].message`, `/api` errors in

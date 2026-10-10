@@ -8,7 +8,7 @@ Optional part of `assess`. Run it when a site URL is known, either from `--site`
 ## Ground rules (every site)
 - **Read-only, polite, small.**
   - Fetch `robots.txt` first and honour its `Disallow` rules.
-  - Use a generic, honest User-Agent such as `lytics-content-affinity (Lytics site assessment)`. **Never include a person's name, email or account in any header or request.**
+  - Use a generic, honest User-Agent such as `lytics-content (Lytics site assessment)`. **Never include a person's name, email or account in any header or request.**
   - At most one request every 2 seconds.
   - Hard caps: **50 HTML pages** and **20 sitemap files** per run.
 - **Never crawl a whole site.** Sample it. A sitemap tells you the site's size without fetching its pages.

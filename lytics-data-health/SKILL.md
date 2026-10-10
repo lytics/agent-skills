@@ -35,8 +35,7 @@ If the user asks about one area (streams, jobs, schema), focus on it in health-c
 
 ## Related skills
 
-- `lytics-integrations`: faulted/failed jobs, job logs in depth, bouncing or reconfiguring a job, checking the source connection behind a dead stream.
+- `lytics-integrations`: faulted/failed jobs, job logs in depth, bouncing or reconfiguring a job, checking the source connection behind a dead stream; or an outbound export that isn't delivering (its export-debug mode), as opposed to inbound data.
 - `lytics-schema`: identity-field changes, low-coverage or stale fields, mapping fixes.
 - `lytics-profiles`: "why isn't this profile updating?" for a specific person, after confirming the stream is receiving data.
-- `lytics-export-debugger`: an outbound export that isn't delivering, as opposed to inbound data.
 - `lytics-audiences`: segment-size questions beyond the trend in the metrics deep dive.

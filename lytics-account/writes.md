@@ -58,7 +58,7 @@ Before writing a job:
 3. Write via `POST /v2/connection` or `PUT /v2/connection/{id}`.
 
 ### Templates
-Webhook templates (the `lytics-webhook-templates` skill) are referenced by webhook-workflow jobs via `config.template_id`. Templates therefore sync **before** any dependent webhook job; the topological sort enforces this naturally via the dep edge added in Step 3 ([dependencies.md](dependencies.md)).
+Webhook templates (the `lytics-integrations` skill) are referenced by webhook-workflow jobs via `config.template_id`. Templates therefore sync **before** any dependent webhook job; the topological sort enforces this naturally via the dep edge added in Step 3 ([dependencies.md](dependencies.md)).
 
 1. **Resolve destination by `(name, type)`** (`GET /v2/template`, filter, then `GET /v2/template/{id}` for the body).
 2. **Probe source-body location** on the GET response. The body may be on `data` directly, on `data.body`, on `data.source`, or require `?include_body=true` / `/v2/template/{id}/source`. Cache the working shape per-account.
@@ -69,8 +69,8 @@ Webhook templates (the `lytics-webhook-templates` skill) are referenced by webho
    - Strip server-assigned fields (`id`, `aid`, `account_id`, `author_id`, `created`, `updated`)
 4. **Classify**: equal -> `skip`; differ -> `update` (or `conflict` under `--create-only`); missing in dst -> `create`.
 5. **Write**:
-   - Create: `POST /v2/template?name=<>&type=<>&description=<>` -- metadata in query string, body raw via `--data-binary`. Use `Content-Type: text/plain` first, fall back to `application/javascript` on 415 (see the `lytics-webhook-templates` skill Probing Notes).
-   - Update: `PUT /v2/template/{id}?name=<>&type=<>&description=<>` (the API reference says POST but the live endpoint requires PUT; see the `lytics-webhook-templates` skill Probing Notes).
+   - Create: `POST /v2/template?name=<>&type=<>&description=<>` -- metadata in query string, body raw via `--data-binary`. Use `Content-Type: text/plain` first, fall back to `application/javascript` on 415 (see the `lytics-integrations` skill Probing Notes).
+   - Update: `PUT /v2/template/{id}?name=<>&type=<>&description=<>` (the API reference says POST but the live endpoint requires PUT; see the `lytics-integrations` skill Probing Notes).
 6. **Read-after-write**: GET the template back, re-normalize, expect zero diff. If the server normalized whitespace differently than we did, record `server_normalized` (not `server_drift`).
 7. **Update the in-run map** `(template, name, type) -> dst_id` so dependent webhook jobs can remap `config.template_id` later in the topological order.
 
